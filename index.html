@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 연표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFAF7;
+    --ink: #22201B;
+    --ink-soft: #6B6960;
+    --line: #E3E0D6;
+    --line-strong: #C9C5B8;
+    --spine: #33415C;
+    --spine-soft: #33415C1A;
+    --tag: #A8712F;
+    --tag-bg: #A8712F14;
+    --card-bg: #FFFFFF;
+    --danger: #B14A3C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 24px 120px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+  header p {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+  }
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    margin: 28px 0 8px;
+  }
+  .add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--spine);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  .add-btn:hover { background: #2A3549; }
+  .add-btn:active { transform: scale(0.97); }
+  .add-btn svg { width: 16px; height: 16px; }
+
+  .timeline {
+    position: relative;
+    margin-top: 40px;
+    padding: 20px 0 10px;
+  }
+  .spine-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: repeating-linear-gradient(to bottom, var(--line-strong) 0 4px, transparent 4px 9px);
+    transform: translateX(-50%);
+  }
+  .entry-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    align-items: start;
+    margin-bottom: 30px;
+  }
+  .dot {
+    grid-column: 2;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--spine);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--line-strong);
+    margin: 30px auto 0;
+    position: relative;
+    z-index: 2;
+  }
+  .card-slot {
+    display: flex;
+  }
+  .card-slot.left { justify-content: flex-end; padding-right: 24px; }
+  .card-slot.right { justify-content: flex-start; padding-left: 24px; }
+  .connector {
+    position: absolute;
+    top: 35px;
+    height: 1px;
+    background: var(--line-strong);
+    width: 24px;
+  }
+  .card-slot.left ~ .connector,
+  .entry-row .connector.left { right: calc(50% + 20px); }
+  .entry-row .connector.right { left: calc(50% + 20px); }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    width: 100%;
+    max-width: 340px;
+    position: relative;
+    transition: border-color 0.15s ease;
+  }
+  .card:hover {
+    border-color: var(--line-strong);
+  }
+  .card:hover .card-actions { opacity: 1; }
+  .card-date {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  .card-person {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--tag);
+    background: var(--tag-bg);
+    padding: 2px 9px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .card-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .card-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-soft);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+  }
+  .icon-btn:hover { background: var(--line); color: var(--ink); }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+  .empty p:first-child {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(34,32,27,0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid var(--line);
+  }
+  .modal h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 20px;
+    margin: 0 0 20px;
+  }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .field input,
+  .field textarea {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    background: #fff;
+  }
+  .field input:focus,
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--spine);
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 22px;
+  }
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary { background: var(--spine); color: #fff; }
+  .btn-primary:hover { background: #2A3549; }
+  .btn-ghost { background: none; color: var(--ink-soft); }
+  .btn-ghost:hover { color: var(--ink); }
+  .btn-danger-text { background: none; color: var(--danger); font-size: 13px; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 32px 12px 100px; }
+    .entry-row { grid-template-columns: 30px 1fr; }
+    .spine-line { left: 15px; }
+    .dot { grid-column: 1; margin: 30px 0 0; }
+    .card-slot { grid-column: 2; justify-content: flex-start !important; padding: 0 0 0 16px !important; }
+    .entry-row .connector { display: none; }
+    .card { max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>나의 연표</h1>
+    <p>시간 순서대로 기록하는 인물과 사건</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="add-btn" id="openAddBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      항목 추가
+    </button>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">새 항목 추가</h2>
+    <form id="entryForm">
+      <div class="field">
+        <label for="dateInput">날짜</label>
+        <input type="date" id="dateInput" required>
+      </div>
+      <div class="field">
+        <label for="personInput">인물</label>
+        <input type="text" id="personInput" placeholder="예: 세종대왕" required>
+      </div>
+      <div class="field">
+        <label for="contentInput">내용</label>
+        <textarea id="contentInput" placeholder="어떤 일이 있었나요?" required></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-danger-text" id="deleteBtn" style="display:none;">삭제</button>
+        <div style="display:flex; gap:8px; margin-left:auto;">
+          <button type="button" class="btn btn-ghost" id="cancelBtn">취소</button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">저장</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let entries = [];
+let editingId = null;
+
+const timelineEl = document.getElementById('timeline');
+const modalOverlay = document.getElementById('modalOverlay');
+const entryForm = document.getElementById('entryForm');
+const modalTitle = document.getElementById('modalTitle');
+const dateInput = document.getElementById('dateInput');
+const personInput = document.getElementById('personInput');
+const contentInput = document.getElementById('contentInput');
+const deleteBtn = document.getElementById('deleteBtn');
+
+async function loadEntries() {
+  try {
+    const raw = localStorage.getItem('timeline-entries');
+    entries = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    entries = [];
+  }
+  render();
+}
+
+async function saveEntries() {
+  try {
+    localStorage.setItem('timeline-entries', JSON.stringify(entries));
+  } catch (e) {
+    console.error('저장 실패', e);
+  }
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function render() {
+  timelineEl.innerHTML = '';
+
+  if (entries.length === 0) {
+    timelineEl.innerHTML = `
+      <div class="empty">
+        <p>아직 기록이 없어요</p>
+        <p>첫 번째 항목을 추가해서 연표를 시작해보세요.</p>
+      </div>`;
+    return;
+  }
+
+  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+
+  const spine = document.createElement('div');
+  spine.className = 'spine-line';
+  timelineEl.appendChild(spine);
+
+  sorted.forEach((entry, i) => {
+    const side = i % 2 === 0 ? 'left' : 'right';
+    const row = document.createElement('div');
+    row.className = 'entry-row';
+
+    const leftSlot = document.createElement('div');
+    leftSlot.className = 'card-slot left';
+    const rightSlot = document.createElement('div');
+    rightSlot.className = 'card-slot right';
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-actions">
+        <button class="icon-btn" data-edit="${entry.id}" aria-label="수정">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+      <div class="card-date">${formatDate(entry.date)}</div>
+      <div class="card-person">${escapeHtml(entry.person)}</div>
+      <div class="card-content">${escapeHtml(entry.content)}</div>
+    `;
+
+    const conn = document.createElement('div');
+    conn.className = 'connector ' + side;
+
+    if (side === 'left') {
+      leftSlot.appendChild(card);
+    } else {
+      rightSlot.appendChild(card);
+    }
+
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+
+    row.appendChild(leftSlot);
+    row.appendChild(dot);
+    row.appendChild(rightSlot);
+    row.appendChild(conn);
+
+    timelineEl.appendChild(row);
+
+    card.querySelector('[data-edit]').addEventListener('click', () => openEdit(entry.id));
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function openAdd() {
+  editingId = null;
+  modalTitle.textContent = '새 항목 추가';
+  entryForm.reset();
+  deleteBtn.style.display = 'none';
+  modalOverlay.classList.add('open');
+  dateInput.focus();
+}
+
+function openEdit(id) {
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  editingId = id;
+  modalTitle.textContent = '항목 수정';
+  dateInput.value = entry.date;
+  personInput.value = entry.person;
+  contentInput.value = entry.content;
+  deleteBtn.style.display = 'inline-block';
+  modalOverlay.classList.add('open');
+}
+
+function closeModal() {
+  modalOverlay.classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('openAddBtn').addEventListener('click', openAdd);
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+entryForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = {
+    date: dateInput.value,
+    person: personInput.value.trim(),
+    content: contentInput.value.trim()
+  };
+  if (editingId) {
+    const idx = entries.findIndex(en => en.id === editingId);
+    if (idx > -1) entries[idx] = { ...entries[idx], ...data };
+  } else {
+    entries.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), ...data });
+  }
+  await saveEntries();
+  closeModal();
+  render();
+});
+
+deleteBtn.addEventListener('click', async () => {
+  if (!editingId) return;
+  entries = entries.filter(en => en.id !== editingId);
+  await saveEntries();
+  closeModal();
+  render();
+});
+
+loadEntries();
+</script>
+</body>
+</html>
