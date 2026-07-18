@@ -206,6 +206,8 @@
   }
   .icon-btn:hover { background: var(--line); color: var(--ink); }
   .icon-btn svg { width: 14px; height: 14px; }
+  .icon-btn:disabled { opacity: 0.25; cursor: default; }
+  .icon-btn:disabled:hover { background: none; color: var(--ink-soft); }
 
   .empty {
     text-align: center;
@@ -415,12 +417,6 @@ async function saveEntries() {
   }
 }
 
-function extractSortKey(dateStr) {
-  if (!dateStr) return Infinity;
-  const m = dateStr.match(/-?\d+/);
-  return m ? parseInt(m[0], 10) : Infinity;
-}
-
 function render() {
   timelineEl.innerHTML = '';
 
@@ -433,13 +429,8 @@ function render() {
     return;
   }
 
-  const sorted = [...entries]
-    .map((e, i) => ({ ...e, __i: i }))
-    .sort((a, b) => {
-      const ka = extractSortKey(a.date), kb = extractSortKey(b.date);
-      if (ka !== kb) return ka - kb;
-      return a.__i - b.__i;
-    });
+  // 표시 순서 = entries 배열 순서 그대로 (위/아래 버튼으로 직접 조정)
+  const sorted = entries;
 
   const spine = document.createElement('div');
   spine.className = 'spine-line';
@@ -470,6 +461,12 @@ function render() {
 
     card.innerHTML = `
       <div class="card-actions">
+        <button class="icon-btn" data-move-up="${entry.id}" aria-label="위로 이동" ${i === 0 ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+        <button class="icon-btn" data-move-down="${entry.id}" aria-label="아래로 이동" ${i === sorted.length - 1 ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        </button>
         <button class="icon-btn" data-edit="${entry.id}" aria-label="수정">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -502,6 +499,10 @@ function render() {
     timelineEl.appendChild(row);
 
     card.querySelector('[data-edit]').addEventListener('click', () => openEdit(entry.id));
+    const upBtn = card.querySelector('[data-move-up]');
+    const downBtn = card.querySelector('[data-move-down]');
+    if (upBtn) upBtn.addEventListener('click', () => moveEntry(entry.id, -1));
+    if (downBtn) downBtn.addEventListener('click', () => moveEntry(entry.id, 1));
     const toggleBtn = card.querySelector('[data-toggle]');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -511,6 +512,15 @@ function render() {
       });
     }
   });
+}
+
+async function moveEntry(id, direction) {
+  const idx = entries.findIndex(e => e.id === id);
+  const targetIdx = idx + direction;
+  if (idx === -1 || targetIdx < 0 || targetIdx >= entries.length) return;
+  [entries[idx], entries[targetIdx]] = [entries[targetIdx], entries[idx]];
+  await saveEntries();
+  render();
 }
 
 function escapeHtml(str) {
