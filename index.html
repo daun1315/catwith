@@ -6,6 +6,9 @@
 <title>연표</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --bg: #FBFAF7;
@@ -368,6 +371,35 @@
   .btn-ghost:hover { color: var(--ink); }
   .btn-danger-text { background: none; color: var(--danger); font-size: 13px; }
 
+  .topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 16px 24px 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    padding: 0;
+  }
+  .link-btn:hover { color: var(--ink); }
+  .auth-error {
+    color: var(--danger);
+    font-size: 13px;
+    margin: -8px 0 12px;
+    min-height: 1em;
+  }
+
   @media (max-width: 640px) {
     .wrap { padding: 24px 12px 100px; }
     .entry-row { grid-template-columns: 30px 1fr; }
@@ -380,6 +412,11 @@
 </style>
 </head>
 <body>
+<div class="topbar" id="topbar" style="display:none;">
+  <span id="userEmail"></span>
+  <button id="logoutBtn" class="link-btn">로그아웃</button>
+</div>
+
 <div class="wrap">
   <div class="toolbar">
     <button class="add-btn" id="openAddBtn">
@@ -389,6 +426,28 @@
   </div>
 
   <div class="timeline" id="timeline"></div>
+</div>
+
+<div class="modal-overlay open" id="authOverlay">
+  <div class="modal">
+    <h2 id="authTitle">로그인</h2>
+    <p class="hint" style="margin:-12px 0 16px;">이 계정으로 로그인하면 어떤 기기에서든 같은 연표를 볼 수 있어요.</p>
+    <form id="authForm">
+      <div class="field">
+        <label for="authEmail">이메일</label>
+        <input type="email" id="authEmail" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="authPassword">비밀번호 <span class="hint">(6자 이상)</span></label>
+        <input type="password" id="authPassword" required minlength="6" autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="authError"></div>
+      <div class="modal-actions" style="justify-content:flex-end;">
+        <button type="button" class="btn btn-ghost" id="switchAuthModeBtn">계정이 없으신가요? 회원가입</button>
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn">로그인</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -430,6 +489,114 @@
 </div>
 
 <script>
+// ── 1) 아래 firebaseConfig 값을 본인의 Firebase 프로젝트 설정으로 바꿔주세요 ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBQqh6favEs9V_tA18wnQpR0AZJBb-w6X0",
+  authDomain: "timeline-d468b.firebaseapp.com",
+  projectId: "timeline-d468b",
+  storageBucket: "timeline-d468b.firebasestorage.app",
+  messagingSenderId: "1070548664526",
+  appId: "1:1070548664526:web:0ff4bd91b05d10839c909f"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let unsubscribeSnapshot = null;
+let isSignupMode = false;
+
+const authOverlay = document.getElementById('authOverlay');
+const authForm = document.getElementById('authForm');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authError = document.getElementById('authError');
+const authTitle = document.getElementById('authTitle');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const switchAuthModeBtn = document.getElementById('switchAuthModeBtn');
+const topbar = document.getElementById('topbar');
+const userEmailEl = document.getElementById('userEmail');
+
+switchAuthModeBtn.addEventListener('click', () => {
+  isSignupMode = !isSignupMode;
+  authTitle.textContent = isSignupMode ? '회원가입' : '로그인';
+  authSubmitBtn.textContent = isSignupMode ? '가입하기' : '로그인';
+  switchAuthModeBtn.textContent = isSignupMode ? '이미 계정이 있으신가요? 로그인' : '계정이 없으신가요? 회원가입';
+  authError.textContent = '';
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  authError.textContent = '';
+  const email = authEmail.value.trim();
+  const pw = authPassword.value;
+  try {
+    if (isSignupMode) {
+      await auth.createUserWithEmailAndPassword(email, pw);
+    } else {
+      await auth.signInWithEmailAndPassword(email, pw);
+    }
+  } catch (err) {
+    authError.textContent = translateAuthError(err.code);
+  }
+});
+
+function translateAuthError(code) {
+  const map = {
+    'auth/email-already-in-use': '이미 가입된 이메일이에요.',
+    'auth/invalid-email': '이메일 형식이 올바르지 않아요.',
+    'auth/weak-password': '비밀번호는 6자 이상이어야 해요.',
+    'auth/user-not-found': '가입되지 않은 이메일이에요.',
+    'auth/wrong-password': '비밀번호가 틀렸어요.',
+    'auth/invalid-credential': '이메일 또는 비밀번호가 올바르지 않아요.',
+    'auth/too-many-requests': '시도가 너무 많아요. 잠시 후 다시 시도해주세요.'
+  };
+  return map[code] || '문제가 발생했어요. 다시 시도해주세요.';
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
+
+auth.onAuthStateChanged((user) => {
+  currentUser = user;
+  if (user) {
+    authOverlay.classList.remove('open');
+    topbar.style.display = 'flex';
+    userEmailEl.textContent = user.email;
+    authForm.reset();
+    subscribeToEntries();
+  } else {
+    if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    topbar.style.display = 'none';
+    entries = [];
+    render();
+    authOverlay.classList.add('open');
+  }
+});
+
+function subscribeToEntries() {
+  if (unsubscribeSnapshot) unsubscribeSnapshot();
+  const docRef = db.collection('users').doc(currentUser.uid).collection('timeline').doc('data');
+  unsubscribeSnapshot = docRef.onSnapshot((snap) => {
+    entries = snap.exists && snap.data().entries ? JSON.parse(snap.data().entries) : [];
+    render();
+  }, (err) => {
+    console.error('동기화 오류', err);
+  });
+}
+
+async function saveEntries() {
+  if (!currentUser) return;
+  try {
+    await db.collection('users').doc(currentUser.uid).collection('timeline').doc('data').set({
+      entries: JSON.stringify(entries),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.error('저장 실패', e);
+  }
+}
+</script>
+<script>
 let entries = [];
 let editingId = null;
 let draggedId = null;
@@ -455,24 +622,6 @@ function setSide(side) {
 sideToggle.querySelectorAll('.side-btn').forEach(btn => {
   btn.addEventListener('click', () => setSide(btn.dataset.side));
 });
-
-async function loadEntries() {
-  try {
-    const raw = localStorage.getItem('timeline-entries');
-    entries = raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    entries = [];
-  }
-  render();
-}
-
-async function saveEntries() {
-  try {
-    localStorage.setItem('timeline-entries', JSON.stringify(entries));
-  } catch (e) {
-    console.error('저장 실패', e);
-  }
-}
 
 function render() {
   timelineEl.innerHTML = '';
@@ -729,7 +878,7 @@ deleteBtn.addEventListener('click', async () => {
   render();
 });
 
-loadEntries();
+// 초기 로드는 auth.onAuthStateChanged 리스너에서 처리돼요.
 </script>
 </body>
 </html>
