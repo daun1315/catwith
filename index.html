@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>나의 연표</title>
+<title>연표</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -14,7 +14,6 @@
     --line: #E3E0D6;
     --line-strong: #C9C5B8;
     --spine: #33415C;
-    --spine-soft: #33415C1A;
     --tag: #A8712F;
     --tag-bg: #A8712F14;
     --card-bg: #FFFFFF;
@@ -31,28 +30,12 @@
   .wrap {
     max-width: 920px;
     margin: 0 auto;
-    padding: 56px 24px 120px;
-  }
-  header {
-    text-align: center;
-    margin-bottom: 8px;
-  }
-  header h1 {
-    font-family: 'Fraunces', serif;
-    font-weight: 500;
-    font-size: 34px;
-    letter-spacing: -0.01em;
-    margin: 0 0 6px;
-  }
-  header p {
-    color: var(--ink-soft);
-    font-size: 14px;
-    margin: 0;
+    padding: 40px 24px 120px;
   }
   .toolbar {
     display: flex;
     justify-content: center;
-    margin: 28px 0 8px;
+    margin: 0 0 8px;
   }
   .add-btn {
     display: inline-flex;
@@ -108,6 +91,7 @@
   }
   .card-slot {
     display: flex;
+    min-width: 0;
   }
   .card-slot.left { justify-content: flex-end; padding-right: 24px; }
   .card-slot.right { justify-content: flex-start; padding-left: 24px; }
@@ -118,7 +102,6 @@
     background: var(--line-strong);
     width: 24px;
   }
-  .card-slot.left ~ .connector,
   .entry-row .connector.left { right: calc(50% + 20px); }
   .entry-row .connector.right { left: calc(50% + 20px); }
 
@@ -132,9 +115,7 @@
     position: relative;
     transition: border-color 0.15s ease;
   }
-  .card:hover {
-    border-color: var(--line-strong);
-  }
+  .card:hover { border-color: var(--line-strong); }
   .card:hover .card-actions { opacity: 1; }
   .card-date {
     font-family: 'Fraunces', serif;
@@ -143,6 +124,7 @@
     letter-spacing: -0.01em;
     margin-bottom: 6px;
   }
+  .card-date.muted { color: var(--ink-soft); font-style: italic; }
   .card-person {
     display: inline-block;
     font-size: 12px;
@@ -153,10 +135,54 @@
     border-radius: 999px;
     margin-bottom: 10px;
   }
-  .card-content {
+  .memo-titles {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+  }
+  .memo-titles li {
     font-size: 14px;
-    line-height: 1.6;
+    font-weight: 500;
+    padding: 3px 0;
     color: var(--ink);
+  }
+  .toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 6px 0 0;
+    width: 100%;
+    border-top: 1px solid var(--line);
+    margin-top: 4px;
+  }
+  .toggle-btn svg {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.15s ease;
+  }
+  .toggle-btn.open svg { transform: rotate(180deg); }
+  .memo-detail {
+    display: none;
+    margin-top: 10px;
+  }
+  .memo-detail.open { display: block; }
+  .memo-detail-item { margin-bottom: 12px; }
+  .memo-detail-item:last-child { margin-bottom: 0; }
+  .memo-detail-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .memo-detail-content {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
     white-space: pre-wrap;
     word-break: break-word;
   }
@@ -209,7 +235,9 @@
     border-radius: 16px;
     padding: 28px;
     width: 100%;
-    max-width: 420px;
+    max-width: 460px;
+    max-height: 88vh;
+    overflow-y: auto;
     border: 1px solid var(--line);
   }
   .modal h2 {
@@ -225,6 +253,11 @@
     font-weight: 500;
     color: var(--ink-soft);
     margin-bottom: 6px;
+  }
+  .field .hint {
+    font-weight: 400;
+    color: var(--ink-soft);
+    font-size: 12px;
   }
   .field input,
   .field textarea {
@@ -242,7 +275,39 @@
     outline: none;
     border-color: var(--spine);
   }
-  .field textarea { resize: vertical; min-height: 80px; }
+  .field textarea { resize: vertical; min-height: 60px; }
+
+  .memo-row {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .memo-row .memo-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  }
+  .memo-row input { margin-bottom: 8px; }
+  .add-memo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px dashed var(--line-strong);
+    color: var(--ink-soft);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+  }
+  .add-memo-btn:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .add-memo-btn svg { width: 14px; height: 14px; }
+
   .modal-actions {
     display: flex;
     justify-content: space-between;
@@ -265,7 +330,7 @@
   .btn-danger-text { background: none; color: var(--danger); font-size: 13px; }
 
   @media (max-width: 640px) {
-    .wrap { padding: 32px 12px 100px; }
+    .wrap { padding: 24px 12px 100px; }
     .entry-row { grid-template-columns: 30px 1fr; }
     .spine-line { left: 15px; }
     .dot { grid-column: 1; margin: 30px 0 0; }
@@ -277,11 +342,6 @@
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>나의 연표</h1>
-    <p>시간 순서대로 기록하는 인물과 사건</p>
-  </header>
-
   <div class="toolbar">
     <button class="add-btn" id="openAddBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -297,16 +357,20 @@
     <h2 id="modalTitle">새 항목 추가</h2>
     <form id="entryForm">
       <div class="field">
-        <label for="dateInput">날짜</label>
-        <input type="date" id="dateInput" required>
+        <label for="dateInput">날짜 <span class="hint">(비워도 돼요, 예: "2024" 또는 "미상")</span></label>
+        <input type="text" id="dateInput" placeholder="예: 2024.05 / 2024 / 미상">
       </div>
       <div class="field">
-        <label for="personInput">인물</label>
-        <input type="text" id="personInput" placeholder="예: 세종대왕" required>
+        <label for="personInput">인물 <span class="hint">(선택)</span></label>
+        <input type="text" id="personInput" placeholder="예: 세종대왕">
       </div>
       <div class="field">
-        <label for="contentInput">내용</label>
-        <textarea id="contentInput" placeholder="어떤 일이 있었나요?" required></textarea>
+        <label>메모</label>
+        <div id="memoList"></div>
+        <button type="button" class="add-memo-btn" id="addMemoBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          메모 추가
+        </button>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-danger-text" id="deleteBtn" style="display:none;">삭제</button>
@@ -322,6 +386,7 @@
 <script>
 let entries = [];
 let editingId = null;
+let memoRowCounter = 0;
 
 const timelineEl = document.getElementById('timeline');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -329,7 +394,7 @@ const entryForm = document.getElementById('entryForm');
 const modalTitle = document.getElementById('modalTitle');
 const dateInput = document.getElementById('dateInput');
 const personInput = document.getElementById('personInput');
-const contentInput = document.getElementById('contentInput');
+const memoList = document.getElementById('memoList');
 const deleteBtn = document.getElementById('deleteBtn');
 
 async function loadEntries() {
@@ -350,9 +415,10 @@ async function saveEntries() {
   }
 }
 
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+function extractSortKey(dateStr) {
+  if (!dateStr) return Infinity;
+  const m = dateStr.match(/-?\d+/);
+  return m ? parseInt(m[0], 10) : Infinity;
 }
 
 function render() {
@@ -367,7 +433,13 @@ function render() {
     return;
   }
 
-  const sorted = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+  const sorted = [...entries]
+    .map((e, i) => ({ ...e, __i: i }))
+    .sort((a, b) => {
+      const ka = extractSortKey(a.date), kb = extractSortKey(b.date);
+      if (ka !== kb) return ka - kb;
+      return a.__i - b.__i;
+    });
 
   const spine = document.createElement('div');
   spine.className = 'spine-line';
@@ -383,27 +455,42 @@ function render() {
     const rightSlot = document.createElement('div');
     rightSlot.className = 'card-slot right';
 
+    const memos = entry.memos || [];
+    const hasDate = entry.date && entry.date.trim().length > 0;
+
     const card = document.createElement('div');
     card.className = 'card';
+
+    let memoTitlesHtml = memos.map(m => `<li>${escapeHtml(m.title || '(제목 없음)')}</li>`).join('');
+    let memoDetailHtml = memos.map(m => `
+      <div class="memo-detail-item">
+        <div class="memo-detail-title">${escapeHtml(m.title || '(제목 없음)')}</div>
+        <div class="memo-detail-content">${escapeHtml(m.content || '')}</div>
+      </div>`).join('');
+
     card.innerHTML = `
       <div class="card-actions">
         <button class="icon-btn" data-edit="${entry.id}" aria-label="수정">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
       </div>
-      <div class="card-date">${formatDate(entry.date)}</div>
-      <div class="card-person">${escapeHtml(entry.person)}</div>
-      <div class="card-content">${escapeHtml(entry.content)}</div>
+      <div class="card-date${hasDate ? '' : ' muted'}">${hasDate ? escapeHtml(entry.date) : '날짜 미상'}</div>
+      ${entry.person ? `<div class="card-person">${escapeHtml(entry.person)}</div>` : ''}
+      ${memoTitlesHtml ? `<ul class="memo-titles">${memoTitlesHtml}</ul>` : ''}
+      ${memos.length ? `
+      <button type="button" class="toggle-btn" data-toggle="${entry.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        자세히 보기
+      </button>
+      <div class="memo-detail" id="detail-${entry.id}">${memoDetailHtml}</div>
+      ` : ''}
     `;
 
     const conn = document.createElement('div');
     conn.className = 'connector ' + side;
 
-    if (side === 'left') {
-      leftSlot.appendChild(card);
-    } else {
-      rightSlot.appendChild(card);
-    }
+    if (side === 'left') leftSlot.appendChild(card);
+    else rightSlot.appendChild(card);
 
     const dot = document.createElement('div');
     dot.className = 'dot';
@@ -412,10 +499,17 @@ function render() {
     row.appendChild(dot);
     row.appendChild(rightSlot);
     row.appendChild(conn);
-
     timelineEl.appendChild(row);
 
     card.querySelector('[data-edit]').addEventListener('click', () => openEdit(entry.id));
+    const toggleBtn = card.querySelector('[data-toggle]');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const detail = card.querySelector('.memo-detail');
+        const isOpen = detail.classList.toggle('open');
+        toggleBtn.classList.toggle('open', isOpen);
+      });
+    }
   });
 }
 
@@ -425,10 +519,26 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function addMemoRow(title = '', content = '') {
+  const row = document.createElement('div');
+  row.className = 'memo-row';
+  row.innerHTML = `
+    <button type="button" class="icon-btn memo-remove" aria-label="메모 삭제">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <input type="text" class="memo-title-input" placeholder="메모 제목" value="${escapeHtml(title)}">
+    <textarea class="memo-content-input" placeholder="메모 내용">${escapeHtml(content)}</textarea>
+  `;
+  row.querySelector('.memo-remove').addEventListener('click', () => row.remove());
+  memoList.appendChild(row);
+}
+
 function openAdd() {
   editingId = null;
   modalTitle.textContent = '새 항목 추가';
   entryForm.reset();
+  memoList.innerHTML = '';
+  addMemoRow();
   deleteBtn.style.display = 'none';
   modalOverlay.classList.add('open');
   dateInput.focus();
@@ -439,9 +549,11 @@ function openEdit(id) {
   if (!entry) return;
   editingId = id;
   modalTitle.textContent = '항목 수정';
-  dateInput.value = entry.date;
-  personInput.value = entry.person;
-  contentInput.value = entry.content;
+  dateInput.value = entry.date || '';
+  personInput.value = entry.person || '';
+  memoList.innerHTML = '';
+  const memos = entry.memos && entry.memos.length ? entry.memos : [{ title: '', content: '' }];
+  memos.forEach(m => addMemoRow(m.title, m.content));
   deleteBtn.style.display = 'inline-block';
   modalOverlay.classList.add('open');
 }
@@ -453,17 +565,25 @@ function closeModal() {
 
 document.getElementById('openAddBtn').addEventListener('click', openAdd);
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('addMemoBtn').addEventListener('click', () => addMemoRow());
 modalOverlay.addEventListener('click', (e) => {
   if (e.target === modalOverlay) closeModal();
 });
 
 entryForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const memoRows = [...memoList.querySelectorAll('.memo-row')];
+  const memos = memoRows.map(row => ({
+    title: row.querySelector('.memo-title-input').value.trim(),
+    content: row.querySelector('.memo-content-input').value.trim()
+  })).filter(m => m.title || m.content);
+
   const data = {
-    date: dateInput.value,
+    date: dateInput.value.trim(),
     person: personInput.value.trim(),
-    content: contentInput.value.trim()
+    memos
   };
+
   if (editingId) {
     const idx = entries.findIndex(en => en.id === editingId);
     if (idx > -1) entries[idx] = { ...entries[idx], ...data };
