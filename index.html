@@ -88,6 +88,12 @@
     margin: 30px auto 0;
     position: relative;
     z-index: 2;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .dot:hover {
+    transform: scale(1.6);
+    box-shadow: 0 0 0 2px var(--spine);
   }
   .card-slot {
     display: flex;
@@ -428,6 +434,7 @@ let entries = [];
 let editingId = null;
 let draggedId = null;
 let currentSide = 'left';
+let insertAfterId = null;
 
 const timelineEl = document.getElementById('timeline');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -543,6 +550,8 @@ function render() {
 
     const dot = document.createElement('div');
     dot.className = 'dot';
+    dot.title = '이 아래에 항목 추가';
+    dot.addEventListener('click', () => openAdd(entry.id));
 
     row.appendChild(leftSlot);
     row.appendChild(dot);
@@ -636,14 +645,16 @@ function addMemoRow(title = '', content = '') {
   memoList.appendChild(row);
 }
 
-function openAdd() {
+function openAdd(afterId = null) {
   editingId = null;
-  modalTitle.textContent = '새 항목 추가';
+  insertAfterId = afterId;
+  modalTitle.textContent = afterId ? '이 아래에 항목 추가' : '새 항목 추가';
   entryForm.reset();
   memoList.innerHTML = '';
   addMemoRow();
-  const nextSide = entries.length % 2 === 0 ? 'left' : 'right';
-  setSide(nextSide);
+  const refIdx = afterId ? entries.findIndex(e => e.id === afterId) : entries.length - 1;
+  const refSide = refIdx > -1 ? (entries[refIdx].side === 'right' ? 'right' : 'left') : 'right';
+  setSide(refSide === 'left' ? 'right' : 'left');
   deleteBtn.style.display = 'none';
   modalOverlay.classList.add('open');
   dateInput.focus();
@@ -653,6 +664,7 @@ function openEdit(id) {
   const entry = entries.find(e => e.id === id);
   if (!entry) return;
   editingId = id;
+  insertAfterId = null;
   modalTitle.textContent = '항목 수정';
   dateInput.value = entry.date || '';
   personInput.value = entry.person || '';
@@ -667,9 +679,10 @@ function openEdit(id) {
 function closeModal() {
   modalOverlay.classList.remove('open');
   editingId = null;
+  insertAfterId = null;
 }
 
-document.getElementById('openAddBtn').addEventListener('click', openAdd);
+document.getElementById('openAddBtn').addEventListener('click', () => openAdd());
 document.getElementById('cancelBtn').addEventListener('click', closeModal);
 document.getElementById('addMemoBtn').addEventListener('click', () => addMemoRow());
 modalOverlay.addEventListener('click', (e) => {
@@ -695,7 +708,13 @@ entryForm.addEventListener('submit', async (e) => {
     const idx = entries.findIndex(en => en.id === editingId);
     if (idx > -1) entries[idx] = { ...entries[idx], ...data };
   } else {
-    entries.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), ...data });
+    const newEntry = { id: Date.now().toString(36) + Math.random().toString(36).slice(2), ...data };
+    if (insertAfterId) {
+      const afterIdx = entries.findIndex(en => en.id === insertAfterId);
+      entries.splice(afterIdx > -1 ? afterIdx + 1 : entries.length, 0, newEntry);
+    } else {
+      entries.push(newEntry);
+    }
   }
   await saveEntries();
   closeModal();
