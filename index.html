@@ -113,10 +113,18 @@
     width: 100%;
     max-width: 340px;
     position: relative;
-    transition: border-color 0.15s ease;
+    cursor: grab;
+    transition: border-color 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
   }
+  .card:active { cursor: grabbing; }
   .card:hover { border-color: var(--line-strong); }
   .card:hover .card-actions { opacity: 1; }
+  .card.dragging { opacity: 0.35; }
+  .card.drag-over {
+    border-color: var(--spine);
+    border-style: dashed;
+    box-shadow: 0 0 0 2px var(--spine-soft, rgba(51,65,92,0.12));
+  }
   .card-date {
     font-family: 'Fraunces', serif;
     font-weight: 500;
@@ -191,7 +199,7 @@
     top: 12px;
     right: 12px;
     display: flex;
-    gap: 4px;
+    gap: 2px;
     opacity: 0;
     transition: opacity 0.15s ease;
   }
@@ -278,6 +286,29 @@
     border-color: var(--spine);
   }
   .field textarea { resize: vertical; min-height: 60px; }
+
+  .side-toggle {
+    display: flex;
+    gap: 8px;
+  }
+  .side-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  }
+  .side-btn:hover { border-color: var(--spine); }
+  .side-btn.active {
+    background: var(--spine);
+    border-color: var(--spine);
+    color: #fff;
+  }
 
   .memo-row {
     border: 1px solid var(--line);
@@ -367,6 +398,13 @@
         <input type="text" id="personInput" placeholder="예: 세종대왕">
       </div>
       <div class="field">
+        <label>위치</label>
+        <div class="side-toggle" id="sideToggle">
+          <button type="button" class="side-btn" data-side="left">왼쪽</button>
+          <button type="button" class="side-btn" data-side="right">오른쪽</button>
+        </div>
+      </div>
+      <div class="field">
         <label>메모</label>
         <div id="memoList"></div>
         <button type="button" class="add-memo-btn" id="addMemoBtn">
@@ -388,7 +426,8 @@
 <script>
 let entries = [];
 let editingId = null;
-let memoRowCounter = 0;
+let draggedId = null;
+let currentSide = 'left';
 
 const timelineEl = document.getElementById('timeline');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -398,6 +437,17 @@ const dateInput = document.getElementById('dateInput');
 const personInput = document.getElementById('personInput');
 const memoList = document.getElementById('memoList');
 const deleteBtn = document.getElementById('deleteBtn');
+const sideToggle = document.getElementById('sideToggle');
+
+function setSide(side) {
+  currentSide = side;
+  sideToggle.querySelectorAll('.side-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.side === side);
+  });
+}
+sideToggle.querySelectorAll('.side-btn').forEach(btn => {
+  btn.addEventListener('click', () => setSide(btn.dataset.side));
+});
 
 async function loadEntries() {
   try {
@@ -429,15 +479,15 @@ function render() {
     return;
   }
 
-  // 표시 순서 = entries 배열 순서 그대로 (위/아래 버튼으로 직접 조정)
-  const sorted = entries;
+  // 표시 순서 = entries 배열 순서 그대로 (드래그 또는 위/아래 버튼으로 직접 조정)
+  const list = entries;
 
   const spine = document.createElement('div');
   spine.className = 'spine-line';
   timelineEl.appendChild(spine);
 
-  sorted.forEach((entry, i) => {
-    const side = i % 2 === 0 ? 'left' : 'right';
+  list.forEach((entry, i) => {
+    const side = entry.side === 'right' ? 'right' : 'left';
     const row = document.createElement('div');
     row.className = 'entry-row';
 
@@ -451,6 +501,8 @@ function render() {
 
     const card = document.createElement('div');
     card.className = 'card';
+    card.draggable = true;
+    card.dataset.id = entry.id;
 
     let memoTitlesHtml = memos.map(m => `<li>${escapeHtml(m.title || '(제목 없음)')}</li>`).join('');
     let memoDetailHtml = memos.map(m => `
@@ -464,7 +516,7 @@ function render() {
         <button class="icon-btn" data-move-up="${entry.id}" aria-label="위로 이동" ${i === 0 ? 'disabled' : ''}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
         </button>
-        <button class="icon-btn" data-move-down="${entry.id}" aria-label="아래로 이동" ${i === sorted.length - 1 ? 'disabled' : ''}>
+        <button class="icon-btn" data-move-down="${entry.id}" aria-label="아래로 이동" ${i === list.length - 1 ? 'disabled' : ''}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
         </button>
         <button class="icon-btn" data-edit="${entry.id}" aria-label="수정">
@@ -498,11 +550,14 @@ function render() {
     row.appendChild(conn);
     timelineEl.appendChild(row);
 
+    // 편집 / 이동 버튼
     card.querySelector('[data-edit]').addEventListener('click', () => openEdit(entry.id));
     const upBtn = card.querySelector('[data-move-up]');
     const downBtn = card.querySelector('[data-move-down]');
     if (upBtn) upBtn.addEventListener('click', () => moveEntry(entry.id, -1));
     if (downBtn) downBtn.addEventListener('click', () => moveEntry(entry.id, 1));
+
+    // 펼치기/접기
     const toggleBtn = card.querySelector('[data-toggle]');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', () => {
@@ -511,6 +566,33 @@ function render() {
         toggleBtn.classList.toggle('open', isOpen);
       });
     }
+
+    // 드래그로 순서 변경
+    card.addEventListener('dragstart', (e) => {
+      draggedId = entry.id;
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', entry.id); } catch (err) {}
+      setTimeout(() => card.classList.add('dragging'), 0);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      draggedId = null;
+      document.querySelectorAll('.card.drag-over').forEach(c => c.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (draggedId && draggedId !== entry.id) {
+        card.classList.add('drag-over');
+      }
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      const sourceId = draggedId;
+      if (!sourceId || sourceId === entry.id) return;
+      reorderEntries(sourceId, entry.id);
+    });
   });
 }
 
@@ -519,6 +601,17 @@ async function moveEntry(id, direction) {
   const targetIdx = idx + direction;
   if (idx === -1 || targetIdx < 0 || targetIdx >= entries.length) return;
   [entries[idx], entries[targetIdx]] = [entries[targetIdx], entries[idx]];
+  await saveEntries();
+  render();
+}
+
+async function reorderEntries(sourceId, targetId) {
+  const sourceIdx = entries.findIndex(e => e.id === sourceId);
+  let targetIdx = entries.findIndex(e => e.id === targetId);
+  if (sourceIdx === -1 || targetIdx === -1) return;
+  const [moved] = entries.splice(sourceIdx, 1);
+  if (sourceIdx < targetIdx) targetIdx -= 1;
+  entries.splice(targetIdx, 0, moved);
   await saveEntries();
   render();
 }
@@ -549,6 +642,8 @@ function openAdd() {
   entryForm.reset();
   memoList.innerHTML = '';
   addMemoRow();
+  const nextSide = entries.length % 2 === 0 ? 'left' : 'right';
+  setSide(nextSide);
   deleteBtn.style.display = 'none';
   modalOverlay.classList.add('open');
   dateInput.focus();
@@ -561,6 +656,7 @@ function openEdit(id) {
   modalTitle.textContent = '항목 수정';
   dateInput.value = entry.date || '';
   personInput.value = entry.person || '';
+  setSide(entry.side === 'right' ? 'right' : 'left');
   memoList.innerHTML = '';
   const memos = entry.memos && entry.memos.length ? entry.memos : [{ title: '', content: '' }];
   memos.forEach(m => addMemoRow(m.title, m.content));
@@ -591,6 +687,7 @@ entryForm.addEventListener('submit', async (e) => {
   const data = {
     date: dateInput.value.trim(),
     person: personInput.value.trim(),
+    side: currentSide,
     memos
   };
 
