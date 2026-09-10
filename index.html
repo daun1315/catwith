@@ -91,6 +91,7 @@
   .btn.primary{background:var(--ink);color:#fff;}
   .btn.primary:hover{background:#2A2A2A;}
   .btn.ghost{border-color:var(--muted);color:var(--muted);}
+  .btn.toggle.active{background:var(--ink);color:#fff;}
   .btn.small{padding:6px 10px;font-size:13px;}
   .btn.danger{border-color:var(--ink);color:var(--ink);}
   .btn.danger:hover{background:var(--ink);color:#fff;}
@@ -172,6 +173,12 @@
   .day-cell.empty{border-color:transparent;}
   .day-cell.has-events{font-weight:900;cursor:pointer;}
   .day-cell.has-events:hover{outline:2px solid var(--ink);outline-offset:-2px;}
+
+  .weekday-row.weekday-only, .day-grid.weekday-only{
+    grid-template-columns:repeat(5,1fr);
+  }
+  .weekday-row.weekday-only span{font-size:15px;}
+  .day-grid.weekday-only .day-cell{font-size:22px;}
 
   /* ---------- Sidebar ---------- */
   .sidebar{
@@ -333,8 +340,8 @@
   }
   .overlay.open{display:flex;}
   .overlay-box{
-    background:#fff;border:1px solid var(--ink);width:min(660px,100%);max-height:80vh;
-    display:flex;flex-direction:column;
+    background:#fff;border:1px solid var(--ink);width:min(660px,100%);max-height:85vh;
+    display:flex;flex-direction:column;overflow-y:auto;
   }
   .overlay-head{
     display:flex;justify-content:space-between;align-items:center;
@@ -344,7 +351,7 @@
   .overlay-body{padding:18px;overflow-y:auto;}
   .overlay-body p{font-size:14px;color:var(--muted);margin-top:0;}
   .overlay-body textarea{
-    width:100%;height:320px;border:1px solid var(--ink);font-family:monospace;font-size:13px;
+    width:100%;height:200px;border:1px solid var(--ink);font-family:monospace;font-size:13px;
     padding:10px;resize:vertical;
   }
   .overlay-foot{padding:14px 18px;border-top:1px solid var(--ink);display:flex;justify-content:flex-end;gap:8px;}
@@ -377,7 +384,8 @@
       <button class="btn primary" id="jumpBtn">이동</button>
       <button class="btn icon" id="nextMonth" title="다음 달로 이동">▶</button>
     </div>
-    <button class="btn ghost" id="exportBtn">코드로 내보내기</button>
+    <button class="btn toggle" id="hideWeekendBtn">주말 제외</button>
+    <button class="btn ghost" id="exportBtn">데이터 백업 / 복원</button>
   </div>
 </header>
 
@@ -444,15 +452,24 @@
 <div class="overlay" id="exportOverlay">
   <div class="overlay-box">
     <div class="overlay-head">
-      <h3>코드로 내보내기</h3>
+      <h3>데이터 백업 / 복원</h3>
       <button class="btn small" id="closeOverlay">닫기</button>
     </div>
     <div class="overlay-body">
-      <p>아래 코드를 복사해서 index.html 안의 CATEGORIES, EVENTS 선언부를 통째로 교체하세요.</p>
+      <p><strong>이 사이트는 새로고침하면 입력한 내용이 사라집니다.</strong> 작업을 마치면 아래 코드를 복사해서 안전한 곳에 저장해두세요. 다음에 이어서 쓸 때는 아래 "가져오기"에 붙여넣으면 그대로 복원됩니다. 코드를 수정 요청할 때도 이 코드를 함께 보내주시면 데이터가 유지된 채로 반영해 드릴게요.</p>
+      <p style="font-weight:700;margin-bottom:6px;">① 내보내기 (현재 데이터)</p>
       <textarea id="exportText" readonly></textarea>
     </div>
-    <div class="overlay-foot">
+    <div class="overlay-foot" style="justify-content:space-between;">
+      <span style="font-size:13px;color:var(--muted);align-self:center;">복사해서 꼭 저장해두세요</span>
       <button class="btn primary" id="copyExport">복사</button>
+    </div>
+    <div class="overlay-body" style="border-top:1px solid var(--ink);">
+      <p style="font-weight:700;margin-bottom:6px;">② 가져오기 (백업한 코드 붙여넣기)</p>
+      <textarea id="importText" placeholder="이전에 복사해둔 코드를 여기에 붙여넣으세요"></textarea>
+    </div>
+    <div class="overlay-foot">
+      <button class="btn primary" id="applyImport">가져오기 적용</button>
     </div>
   </div>
 </div>
@@ -511,7 +528,8 @@ let state = {
   startMonth: CONFIG.startMonth,
   activeCategoryIds: new Set(CATEGORIES.map(c=>c.id)),
   sidebarMode: 'color',
-  editingId: null
+  editingId: null,
+  hideWeekends: false
 };
 
 function hexToRgba(hex, alpha){
@@ -607,8 +625,9 @@ function renderCalendar(){
     card.appendChild(h2);
 
     const weekdayRow = document.createElement('div');
-    weekdayRow.className = 'weekday-row';
-    WEEKDAYS.forEach(w=>{
+    weekdayRow.className = 'weekday-row' + (state.hideWeekends ? ' weekday-only' : '');
+    const weekdaysToShow = state.hideWeekends ? WEEKDAYS.slice(1,6) : WEEKDAYS;
+    weekdaysToShow.forEach(w=>{
       const s = document.createElement('span');
       s.textContent = w;
       weekdayRow.appendChild(s);
@@ -616,13 +635,16 @@ function renderCalendar(){
     card.appendChild(weekdayRow);
 
     const dayGrid = document.createElement('div');
-    dayGrid.className = 'day-grid';
+    dayGrid.className = 'day-grid' + (state.hideWeekends ? ' weekday-only' : '');
 
     const leading = firstWeekday(year, month);
     const totalDays = daysInMonth(year, month);
     const totalCells = 42;
 
     for(let i=0;i<totalCells;i++){
+      const weekdayIdx = i % 7;
+      if(state.hideWeekends && (weekdayIdx===0 || weekdayIdx===6)) continue;
+
       const dayNum = i - leading + 1;
       const cell = document.createElement('div');
 
@@ -834,7 +856,7 @@ function renderCategoryPanel(){
       <button class="btn small danger" title="삭제">×</button>
     `;
     const [colorInput, nameInput, delBtn] = row.children;
-    colorInput.addEventListener('input', ()=>{
+    colorInput.addEventListener('change', ()=>{
       cat.color = colorInput.value;
       renderAll(false);
     });
@@ -943,6 +965,39 @@ document.getElementById('copyExport').addEventListener('click', ()=>{
   const ta = document.getElementById('exportText');
   ta.select();
   document.execCommand('copy');
+});
+
+document.getElementById('applyImport').addEventListener('click', ()=>{
+  const code = document.getElementById('importText').value.trim();
+  if(!code) return;
+  try{
+    const fn = new Function(code + '\nreturn {CATEGORIES: CATEGORIES, EVENTS: EVENTS};');
+    const result = fn();
+    if(!Array.isArray(result.CATEGORIES) || !Array.isArray(result.EVENTS)){
+      throw new Error('CATEGORIES / EVENTS 배열을 찾을 수 없습니다.');
+    }
+    CATEGORIES = result.CATEGORIES;
+    EVENTS = result.EVENTS;
+    nextEventId = Math.max(0, ...EVENTS.map(e=>e.id)) + 1;
+    const maxCatSeq = CATEGORIES.reduce((max, c)=>{
+      const m = /^c(\d+)$/.exec(c.id);
+      return m ? Math.max(max, parseInt(m[1],10)) : max;
+    }, 0);
+    nextCatSeq = maxCatSeq + 1;
+    state.activeCategoryIds = new Set(CATEGORIES.map(c=>c.id));
+    state.editingId = null;
+    document.getElementById('exportOverlay').classList.remove('open');
+    document.getElementById('importText').value = '';
+    renderAll(true);
+  }catch(err){
+    alert('코드를 불러오지 못했어요. 백업 코드 형식을 확인해주세요.\n(' + err.message + ')');
+  }
+});
+
+document.getElementById('hideWeekendBtn').addEventListener('click', ()=>{
+  state.hideWeekends = !state.hideWeekends;
+  document.getElementById('hideWeekendBtn').classList.toggle('active', state.hideWeekends);
+  renderCalendar();
 });
 
 /* =========================================================
