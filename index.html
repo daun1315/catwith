@@ -267,13 +267,29 @@
     font-variant-numeric:tabular-nums;
   }
   .event-row.highlight .date{color:#ddd;}
-  .event-row .del{
-    border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:17px;padding:0 2px;
+  .event-row .edit, .event-row .del{
+    border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;padding:0 3px;
     visibility:hidden;
   }
-  .event-row:hover .del{visibility:visible;}
-  .event-row.highlight .del{color:#fff;}
+  .event-row .del{font-size:17px;}
+  .event-row:hover .edit, .event-row:hover .del{visibility:visible;}
+  .event-row.highlight .edit, .event-row.highlight .del{color:#fff;}
   .empty-note{color:var(--muted);font-size:15px;padding:10px 4px;}
+
+  .event-edit-form{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    padding:12px 10px;
+    border:1px solid var(--ink);
+    background:var(--hover);
+    margin:4px 0;
+  }
+  .event-edit-form .row2{display:flex;gap:8px;}
+  .event-edit-form .row2 > *{flex:1;}
+  .event-edit-form select{width:100%;}
+  .event-edit-form .chk{display:flex;align-items:center;gap:7px;font-size:14px;}
+  .event-edit-form .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:2px;}
 
   /* -- category panel -- */
   .cat-row{
@@ -340,6 +356,9 @@
   }
   @media (max-width: 620px){
     .calendar-grid{grid-template-columns:1fr;}
+  }
+  @media (hover: none){
+    .event-row .edit, .event-row .del{visibility:visible;}
   }
 </style>
 </head>
@@ -491,7 +510,8 @@ let state = {
   startYear: CONFIG.startYear,
   startMonth: CONFIG.startMonth,
   activeCategoryIds: new Set(CATEGORIES.map(c=>c.id)),
-  sidebarMode: 'color'
+  sidebarMode: 'color',
+  editingId: null
 };
 
 function hexToRgba(hex, alpha){
@@ -712,6 +732,9 @@ function renderSidebarList(){
 }
 
 function makeEventRow(e){
+  if(state.editingId === e.id){
+    return makeEventEditRow(e);
+  }
   const cat = getCategory(e.categoryId);
   const row = document.createElement('div');
   row.className = 'event-row';
@@ -720,13 +743,80 @@ function makeEventRow(e){
     <span class="sw" style="background:${cat ? cat.color : '#999'}"></span>
     <span class="label">${e.label}</span>
     <span class="date">${formatDateShort(e)}</span>
+    <button class="edit" title="수정">✎</button>
     <button class="del" title="삭제">×</button>
   `;
+  row.querySelector('.edit').addEventListener('click', ()=>{
+    state.editingId = e.id;
+    renderSidebarList();
+  });
   row.querySelector('.del').addEventListener('click', ()=>{
     EVENTS = EVENTS.filter(ev=>ev.id!==e.id);
     renderAll(false);
   });
   return row;
+}
+
+function makeEventEditRow(e){
+  const wrap = document.createElement('div');
+  wrap.className = 'event-edit-form';
+  wrap.dataset.id = e.id;
+
+  const catOptions = CATEGORIES.map(c=>
+    `<option value="${c.id}" ${c.id===e.categoryId?'selected':''}>${c.name}</option>`
+  ).join('');
+
+  wrap.innerHTML = `
+    <input type="text" class="f-label" value="${e.label.replace(/"/g,'&quot;')}" placeholder="일정 이름">
+    <select class="f-category">${catOptions}</select>
+    <label class="chk"><input type="checkbox" class="f-multiday" ${e.endDate ? 'checked' : ''}> 여러 날에 걸친 일정</label>
+    <div class="row2">
+      <div>
+        <input type="date" class="f-start" value="${e.date}">
+      </div>
+      <div class="f-end-wrap" style="display:${e.endDate ? '' : 'none'};">
+        <input type="date" class="f-end" value="${e.endDate || ''}">
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn small ghost f-cancel">취소</button>
+      <button type="button" class="btn small primary f-save">저장</button>
+    </div>
+  `;
+
+  const multiDayChk = wrap.querySelector('.f-multiday');
+  const endWrap = wrap.querySelector('.f-end-wrap');
+  multiDayChk.addEventListener('change', ()=>{
+    endWrap.style.display = multiDayChk.checked ? '' : 'none';
+  });
+
+  wrap.querySelector('.f-cancel').addEventListener('click', ()=>{
+    state.editingId = null;
+    renderSidebarList();
+  });
+
+  wrap.querySelector('.f-save').addEventListener('click', ()=>{
+    const label = wrap.querySelector('.f-label').value.trim();
+    const categoryId = wrap.querySelector('.f-category').value;
+    const start = wrap.querySelector('.f-start').value;
+    const multiDay = multiDayChk.checked;
+    const end = wrap.querySelector('.f-end').value;
+    if(!label || !categoryId || !start) return;
+
+    e.label = label;
+    e.categoryId = categoryId;
+    e.date = start;
+    if(multiDay && end && end >= start){
+      e.endDate = end;
+    } else {
+      delete e.endDate;
+    }
+
+    state.editingId = null;
+    renderAll(false);
+  });
+
+  return wrap;
 }
 
 /* =========================================================
