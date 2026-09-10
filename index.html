@@ -9,23 +9,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#FFFFFF;
+    --bg:#FFFFFF;
     --ink:#0A0A0A;
-    --muted:#6E6E6E;
+    --muted:#6B6B6B;
     --line:#0A0A0A;
-    --hair:#D8D8D8;
-    --font:"Noto Sans KR", sans-serif;
+    --grid-line:#D8D8D8;
+    --hover:#F2F2F2;
+    --radius:0;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--paper);
+    background:var(--bg);
     color:var(--ink);
-    font-family:var(--font);
-    padding:32px clamp(16px,4vw,48px) 64px;
+    font-family:"Noto Sans KR", sans-serif;
+    font-size:17px;
+    padding:32px clamp(16px,3.4vw,48px) 64px;
+    letter-spacing:-0.01em;
   }
-  h1,h2,h3{font-family:var(--font);margin:0;}
-  input,select,textarea,button{font-family:var(--font);}
+  button, input, select{font-family:inherit;}
 
   /* ---------- Header ---------- */
   header{
@@ -33,285 +35,311 @@
     flex-wrap:wrap;
     align-items:flex-end;
     justify-content:space-between;
-    gap:24px;
-    border-bottom:2px solid var(--line);
-    padding-bottom:18px;
-    margin-bottom:18px;
+    gap:20px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:20px;
+    margin-bottom:22px;
   }
   .title-block h1{
     font-weight:900;
-    font-size:clamp(24px,3vw,34px);
-    letter-spacing:-0.01em;
+    font-size:clamp(30px,3.2vw,40px);
+    margin:0 0 8px;
   }
   .title-block p{
-    margin:6px 0 0;
+    margin:0;
     color:var(--muted);
-    font-size:13px;
+    font-size:16px;
   }
   #rangeLabel{font-weight:700;color:var(--ink);}
 
-  .date-nav{
+  .header-actions{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:10px;
     flex-wrap:wrap;
   }
+  .date-nav{display:flex;align-items:center;gap:7px;}
   select{
-    font-size:13px;
-    padding:8px 10px;
-    border:1px solid var(--line);
-    border-radius:0 !important;
-    background:var(--paper);
+    font-size:15px;
+    padding:10px 10px;
+    border:1px solid var(--ink);
+    background:#fff;
     color:var(--ink);
   }
-  button{
-    cursor:pointer;
-    border-radius:6px;
+  input[type="text"], input[type="date"]{
+    font-size:15px;
+    padding:10px 10px;
+    border:1px solid var(--ink);
+    background:#fff;
+    color:var(--ink);
+    width:100%;
+  }
+  input[type="color"]{
+    width:36px;height:36px;border:1px solid var(--ink);padding:0;background:#fff;cursor:pointer;
   }
   .btn{
-    border:1px solid var(--line);
-    background:var(--paper);
+    border:1px solid var(--ink);
+    background:#fff;
     color:var(--ink);
-    padding:8px 12px;
-    font-size:13px;
-    transition:background .12s ease, color .12s ease;
+    padding:10px 14px;
+    font-size:15px;
+    font-weight:500;
+    cursor:pointer;
   }
-  .btn:hover{background:var(--ink);color:var(--paper);}
-  .btn.icon{padding:8px 11px;font-size:14px;line-height:1;border-radius:6px;}
-  .btn.primary{background:var(--ink);color:var(--paper);}
-  .btn.primary:hover{background:var(--paper);color:var(--ink);}
-  .btn.small{padding:5px 9px;font-size:12px;}
-  .btn.ghost{border-color:var(--hair);color:var(--muted);}
-  .btn.ghost:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .btn:hover{background:var(--hover);}
+  .btn.icon{padding:10px 13px;}
+  .btn.primary{background:var(--ink);color:#fff;}
+  .btn.primary:hover{background:#2A2A2A;}
+  .btn.ghost{border-color:var(--muted);color:var(--muted);}
+  .btn.small{padding:6px 10px;font-size:13px;}
+  .btn.danger{border-color:var(--ink);color:var(--ink);}
+  .btn.danger:hover{background:var(--ink);color:#fff;}
+  .btn:disabled{opacity:0.35;cursor:default;}
+  .btn:disabled:hover{background:#fff;}
 
-  /* ---------- Category filter chips (header) ---------- */
+  /* ---------- Category filter chips ---------- */
   .chip-row{
     display:flex;
     flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:26px;
+    gap:9px;
+    margin-bottom:28px;
   }
   .chip{
     display:flex;
     align-items:center;
-    gap:7px;
-    padding:6px 11px 6px 8px;
-    border:1px solid var(--hair);
-    background:var(--paper);
-    font-size:12.5px;
+    gap:8px;
+    padding:8px 13px;
+    border:1px solid var(--ink);
+    background:#fff;
+    font-size:15px;
     color:var(--muted);
-    transition:border-color .12s ease, color .12s ease;
-    border-radius:6px;
+    cursor:pointer;
   }
-  .chip.active{border-color:var(--ink);color:var(--ink);}
-  .chip .sq{width:9px;height:9px;flex:0 0 auto;}
+  .chip.active{color:var(--ink);background:var(--hover);font-weight:700;}
+  .chip .sw{width:12px;height:12px;flex:0 0 auto;}
 
-  /* ---------- Layout ---------- */
+  /* ---------- Layout: calendar 3 : sidebar 2 ---------- */
   .layout{
     display:grid;
-    grid-template-columns:minmax(0,3fr) minmax(0,2fr);
-    gap:24px;
+    grid-template-columns:3fr 2fr;
+    gap:26px;
     align-items:flex-start;
   }
   .calendar-grid{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:16px;
+    gap:18px;
   }
 
-  /* ---------- Month card ---------- */
+  /* ---------- Month card: old-calendar feel ---------- */
   .month-card{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:12px 12px 8px;
+    background:#fff;
+    border:1px solid var(--ink);
+    padding:16px 14px 14px;
   }
   .month-card h2{
-    font-weight:700;
-    font-size:15px;
-    margin:0 0 9px;
-    letter-spacing:-0.01em;
+    font-weight:900;
+    font-size:22px;
+    margin:0 0 12px;
+    text-align:center;
   }
   .weekday-row, .day-grid{
     display:grid;
     grid-template-columns:repeat(7,1fr);
   }
-  .weekday-row{margin-bottom:4px;}
+  .weekday-row{margin-bottom:2px;}
   .weekday-row span{
     text-align:center;
-    font-size:10px;
+    font-size:13px;
+    font-weight:700;
     color:var(--muted);
-    padding-bottom:4px;
+    padding-bottom:6px;
   }
-  .weekday-row span:first-child{color:var(--ink);font-weight:700;}
-  .weekday-row span:last-child{color:var(--ink);font-weight:700;}
+  .weekday-row span:first-child, .weekday-row span:last-child{color:var(--ink);}
 
   .day-cell{
     position:relative;
-    aspect-ratio:1/0.82;
+    aspect-ratio:1/0.95;
     display:flex;
-    align-items:flex-start;
-    justify-content:flex-end;
-    padding:3px 4px;
-    font-size:10.5px;
-    border-radius:4px;
+    align-items:center;
+    justify-content:center;
+    font-size:17px;
+    font-weight:500;
     color:var(--ink);
     background:transparent;
+    border:1px solid var(--grid-line);
   }
-  .day-cell.empty{visibility:hidden;}
-  .day-cell.has-events{font-weight:700;}
+  .day-cell.empty{border-color:transparent;}
+  .day-cell.has-events{font-weight:900;cursor:pointer;}
+  .day-cell.has-events:hover{outline:2px solid var(--ink);outline-offset:-2px;}
 
   /* ---------- Sidebar ---------- */
   .sidebar{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:18px;
+    position:sticky;
+    top:24px;
+    background:#fff;
+    border:1px solid var(--ink);
+    padding:0;
+    max-height:calc(100vh - 48px);
+    display:flex;
+    flex-direction:column;
   }
-  .sidebar-section{border-bottom:1px solid var(--hair);padding-bottom:16px;margin-bottom:16px;}
-  .sidebar-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
-  .sidebar h3{
-    font-size:14px;
+  .tab-row{
+    display:flex;
+    border-bottom:1px solid var(--ink);
+  }
+  .tab-row button{
+    flex:1;
+    border:none;
+    border-right:1px solid var(--ink);
+    background:#fff;
+    color:var(--muted);
+    padding:14px 4px;
+    font-size:15px;
     font-weight:700;
-    margin:0 0 10px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+    cursor:pointer;
   }
+  .tab-row button:last-child{border-right:none;}
+  .tab-row button.active{background:var(--ink);color:#fff;}
 
-  /* category manage */
-  .cat-row{
-    display:flex;
-    align-items:center;
-    gap:7px;
-    padding:5px 0;
-  }
-  .cat-row input[type=color]{
-    width:26px;height:26px;border:1px solid var(--line);padding:0;background:none;cursor:pointer;
-  }
-  .cat-row input[type=text]{
-    flex:1;
-    border:1px solid var(--hair);
-    padding:6px 7px;
-    font-size:12.5px;
-    color:var(--ink);
-  }
-  .cat-row input[type=text]:focus{border-color:var(--ink);outline:none;}
-  .cat-add{
-    display:flex;
-    align-items:center;
-    gap:7px;
-    margin-top:8px;
-  }
-  .cat-add input[type=text]{
-    flex:1;
-    border:1px dashed var(--hair);
-    padding:6px 7px;
-    font-size:12.5px;
-  }
-  .cat-add input[type=color]{
-    width:26px;height:26px;border:1px solid var(--line);padding:0;background:none;cursor:pointer;
-  }
+  .tab-panel{display:none;padding:18px;overflow-y:auto;}
+  .tab-panel.active{display:flex;flex-direction:column;flex:1;min-height:0;}
 
-  /* event form */
-  .form-grid{display:flex;flex-direction:column;gap:8px;}
-  .form-grid label{font-size:11.5px;color:var(--muted);display:block;margin-bottom:3px;}
-  .form-grid select,
-  .form-grid input[type=text],
-  .form-grid input[type=date]{
-    width:100%;
-    border:1px solid var(--hair);
-    padding:7px 8px;
-    font-size:12.5px;
-    color:var(--ink);
-  }
-  .form-grid select:focus,
-  .form-grid input:focus{border-color:var(--ink);outline:none;}
-  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .form-actions{display:flex;gap:8px;margin-top:2px;}
-  .form-actions .btn{flex:1;}
-  .form-error{font-size:11.5px;color:var(--ink);border:1px solid var(--ink);padding:6px 8px;display:none;}
-  .form-error.show{display:block;}
-
-  /* mode switch + list */
+  /* -- list panel -- */
   .mode-switch{
     display:flex;
-    border:1px solid var(--line);
-    margin-bottom:12px;
+    border:1px solid var(--ink);
+    margin-bottom:16px;
+    flex:0 0 auto;
   }
   .mode-switch button{
     flex:1;
     border:none;
-    background:var(--paper);
-    padding:7px 0;
-    font-size:12.5px;
+    border-right:1px solid var(--ink);
+    background:#fff;
+    padding:9px 0;
+    font-size:14px;
     color:var(--muted);
-    border-right:1px solid var(--line);
+    cursor:pointer;
   }
   .mode-switch button:last-child{border-right:none;}
-  .mode-switch button.active{background:var(--ink);color:var(--paper);}
+  .mode-switch button.active{background:var(--ink);color:#fff;}
 
-  .event-list{max-height:520px;overflow-y:auto;padding-right:4px;}
+  .event-list{overflow-y:auto;flex:1;min-height:0;}
   .group-title{
-    font-size:11px;
+    font-size:13px;
     font-weight:700;
-    color:var(--muted);
-    margin:14px 0 6px;
+    color:var(--ink);
+    margin:16px 0 7px;
     display:flex;
     align-items:center;
-    gap:6px;
-    text-transform:none;
+    gap:7px;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
   }
   .group-title:first-child{margin-top:0;}
-  .group-title .sq{width:8px;height:8px;}
+  .group-title .sw{width:9px;height:9px;}
 
   .event-row{
     display:flex;
-    align-items:flex-start;
-    gap:8px;
-    padding:7px 4px;
-    border-bottom:1px solid var(--hair);
-    font-size:12.5px;
+    align-items:center;
+    gap:10px;
+    padding:10px 4px;
+    font-size:15.5px;
+    border-bottom:1px solid #E7E7E7;
+    transition:background-color .3s ease, color .3s ease;
   }
-  .event-row:last-child{border-bottom:none;}
-  .event-row .sq{width:9px;height:9px;margin-top:4px;flex:0 0 auto;}
-  .event-row .body{flex:1;min-width:0;}
-  .event-row .meta{color:var(--muted);font-size:11px;margin-top:1px;}
-  .event-row .row-actions{display:flex;gap:4px;flex:0 0 auto;}
-  .event-row .row-actions button{
-    border:1px solid var(--hair);
-    background:var(--paper);
+  .event-row:hover{background:var(--hover);}
+  .event-row.highlight{background:var(--ink);color:#fff;}
+  .event-row .sw{width:10px;height:10px;flex:0 0 auto;}
+  .event-row .label{
+    flex:1;
+    text-align:left;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .event-row .date{
+    flex:0 0 auto;
+    text-align:right;
     color:var(--muted);
-    width:22px;height:22px;
-    font-size:11px;
-    line-height:1;
-    padding:0;
+    font-size:14px;
+    font-variant-numeric:tabular-nums;
   }
-  .event-row .row-actions button:hover{border-color:var(--ink);color:var(--ink);}
-  .empty-note{color:var(--muted);font-size:12.5px;padding:6px 0;}
+  .event-row.highlight .date{color:#ddd;}
+  .event-row .del{
+    border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:17px;padding:0 2px;
+    visibility:hidden;
+  }
+  .event-row:hover .del{visibility:visible;}
+  .event-row.highlight .del{color:#fff;}
+  .empty-note{color:var(--muted);font-size:15px;padding:10px 4px;}
 
-  /* export */
-  .export-box{margin-top:10px;}
-  .export-box textarea{
-    width:100%;
-    height:140px;
-    border:1px solid var(--line);
-    font-family:monospace;
-    font-size:11px;
-    padding:8px;
-    resize:vertical;
-    display:none;
+  /* -- category panel -- */
+  .cat-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid #E7E7E7;
   }
-  .export-box textarea.show{display:block;}
-  .export-actions{display:flex;gap:8px;margin-top:8px;}
+  .cat-row input[type="text"]{flex:1;}
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:7px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  .new-cat-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:16px;
+    padding-top:16px;
+    border-top:2px solid var(--ink);
+  }
+
+  /* -- add event panel -- */
+  .checkbox-row{display:flex;align-items:center;gap:9px;font-size:15px;margin-bottom:16px;}
+  .date-fields{display:flex;gap:10px;}
+  .date-fields .field{flex:1;margin-bottom:0;}
+  #addEventForm .btn.primary{width:100%;margin-top:6px;}
+  .note{font-size:13.5px;color:var(--muted);margin-top:18px;padding-top:16px;border-top:1px solid #E7E7E7;line-height:1.6;}
+
+  /* ---------- export overlay ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,10,10,0.55);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .overlay-box{
+    background:#fff;border:1px solid var(--ink);width:min(660px,100%);max-height:80vh;
+    display:flex;flex-direction:column;
+  }
+  .overlay-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 18px;border-bottom:1px solid var(--ink);
+  }
+  .overlay-head h3{margin:0;font-size:18px;font-weight:700;}
+  .overlay-body{padding:18px;overflow-y:auto;}
+  .overlay-body p{font-size:14px;color:var(--muted);margin-top:0;}
+  .overlay-body textarea{
+    width:100%;height:320px;border:1px solid var(--ink);font-family:monospace;font-size:13px;
+    padding:10px;resize:vertical;
+  }
+  .overlay-foot{padding:14px 18px;border-top:1px solid var(--ink);display:flex;justify-content:flex-end;gap:8px;}
 
   @media (max-width: 980px){
     .layout{grid-template-columns:1fr;}
     .calendar-grid{grid-template-columns:repeat(2,1fr);}
+    .sidebar{position:static;max-height:none;}
   }
   @media (max-width: 620px){
     .calendar-grid{grid-template-columns:1fr;}
-    .form-row-2{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -322,12 +350,15 @@
     <h1>연간 일정 캘린더</h1>
     <p><span id="rangeLabel"></span> · 12개월 보기</p>
   </div>
-  <div class="date-nav">
-    <button class="btn icon" id="prevMonth" title="이전 달로 이동">◀</button>
-    <select id="yearSelect"></select>
-    <select id="monthSelect"></select>
-    <button class="btn primary" id="jumpBtn">이동</button>
-    <button class="btn icon" id="nextMonth" title="다음 달로 이동">▶</button>
+  <div class="header-actions">
+    <div class="date-nav">
+      <button class="btn icon" id="prevMonth" title="이전 달로 이동">◀</button>
+      <select id="yearSelect"></select>
+      <select id="monthSelect"></select>
+      <button class="btn primary" id="jumpBtn">이동</button>
+      <button class="btn icon" id="nextMonth" title="다음 달로 이동">▶</button>
+    </div>
+    <button class="btn ghost" id="exportBtn">코드로 내보내기</button>
   </div>
 </header>
 
@@ -337,48 +368,13 @@
   <div class="calendar-grid" id="calendarGrid"></div>
 
   <aside class="sidebar">
-
-    <div class="sidebar-section">
-      <h3>카테고리</h3>
-      <div id="catRows"></div>
-      <div class="cat-add">
-        <input type="color" id="newCatColor" value="#2F6F6D">
-        <input type="text" id="newCatName" placeholder="새 카테고리 이름">
-        <button class="btn small primary" id="addCatBtn">추가</button>
-      </div>
+    <div class="tab-row">
+      <button id="tabList" class="active">일정 목록</button>
+      <button id="tabCategories">카테고리</button>
+      <button id="tabAdd">일정 추가</button>
     </div>
 
-    <div class="sidebar-section">
-      <h3>일정 작성 <span id="editingTag" style="font-size:11px;color:var(--muted);font-weight:400;display:none;">(수정 중)</span></h3>
-      <div class="form-grid">
-        <div>
-          <label>카테고리</label>
-          <select id="evCategory"></select>
-        </div>
-        <div>
-          <label>일정 이름</label>
-          <input type="text" id="evLabel" placeholder="예: 부산 출장">
-        </div>
-        <div class="form-row-2">
-          <div>
-            <label>시작일</label>
-            <input type="date" id="evStart">
-          </div>
-          <div>
-            <label>종료일 (선택)</label>
-            <input type="date" id="evEnd">
-          </div>
-        </div>
-        <div class="form-error" id="formError"></div>
-        <div class="form-actions">
-          <button class="btn primary" id="submitEventBtn">추가</button>
-          <button class="btn ghost" id="cancelEditBtn" style="display:none;">취소</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="sidebar-section">
-      <h3>일정 목록</h3>
+    <div class="tab-panel active" id="panelList">
       <div class="mode-switch">
         <button id="modeColor" class="active">색상별</button>
         <button id="modeDate">날짜순</button>
@@ -386,54 +382,104 @@
       <div class="event-list" id="eventList"></div>
     </div>
 
-    <div class="sidebar-section">
-      <button class="btn ghost" id="exportBtn" style="width:100%;">코드로 내보내기</button>
-      <div class="export-box">
-        <textarea id="exportArea" readonly></textarea>
-        <div class="export-actions" id="exportCopyRow" style="display:none;">
-          <button class="btn small" id="copyExportBtn">복사</button>
-        </div>
+    <div class="tab-panel" id="panelCategories">
+      <div id="catList"></div>
+      <div class="new-cat-row">
+        <input type="color" id="newCatColor" value="#0A0A0A">
+        <input type="text" id="newCatName" placeholder="새 카테고리 이름">
+        <button class="btn small primary" id="addCatBtn">추가</button>
       </div>
     </div>
 
+    <div class="tab-panel" id="panelAdd">
+      <form id="addEventForm">
+        <div class="field">
+          <label for="evLabel">일정 이름</label>
+          <input type="text" id="evLabel" required placeholder="예: 부산 출장">
+        </div>
+        <div class="field">
+          <label for="evCategory">카테고리</label>
+          <select id="evCategory" required></select>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="evMultiDay">
+          <label for="evMultiDay">여러 날에 걸친 일정</label>
+        </div>
+        <div class="date-fields">
+          <div class="field">
+            <label for="evStart">시작일</label>
+            <input type="date" id="evStart" required>
+          </div>
+          <div class="field" id="endDateField" style="display:none;">
+            <label for="evEnd">종료일</label>
+            <input type="date" id="evEnd">
+          </div>
+        </div>
+        <button type="submit" class="btn primary">일정 추가</button>
+      </form>
+      <p class="note">이 페이지에서의 추가/수정은 현재 세션에만 저장됩니다. GitHub 저장소에 영구 반영하려면 상단 "코드로 내보내기"로 코드를 복사해 index.html의 CATEGORIES / EVENTS 부분에 붙여넣고 커밋하세요.</p>
+    </div>
   </aside>
+</div>
+
+<div class="overlay" id="exportOverlay">
+  <div class="overlay-box">
+    <div class="overlay-head">
+      <h3>코드로 내보내기</h3>
+      <button class="btn small" id="closeOverlay">닫기</button>
+    </div>
+    <div class="overlay-body">
+      <p>아래 코드를 복사해서 index.html 안의 CATEGORIES, EVENTS 선언부를 통째로 교체하세요.</p>
+      <textarea id="exportText" readonly></textarea>
+    </div>
+    <div class="overlay-foot">
+      <button class="btn primary" id="copyExport">복사</button>
+    </div>
+  </div>
 </div>
 
 <script>
 /* =========================================================
-   초기 설정: 시작 연/월을 바꾸면 그 달부터 11개월 뒤(총 12개월)까지 표시됩니다.
+   설정: 시작 연/월을 바꾸면 그 달부터 11개월 뒤(총 12개월)까지 표시됩니다.
    ========================================================= */
-const CONFIG = { startYear: 2012, startMonth: 12 };
+const CONFIG = {
+  startYear: 2012,
+  startMonth: 12   // 1~12
+};
 
-/* 초기 카테고리 */
-const INITIAL_CATEGORIES = [
-  { id:'c1', name:'출장', color:'#2F6F6D' },
-  { id:'c2', name:'휴가', color:'#C98A3B' },
-  { id:'c3', name:'마감', color:'#A8503D' },
-  { id:'c4', name:'회의', color:'#4C6A92' },
+/* =========================================================
+   카테고리 & 일정 데이터
+   ========================================================= */
+let CATEGORIES = [
+  { id:'c1', name:'출장',   color:'#2F6F6D' },
+  { id:'c2', name:'휴가',   color:'#C98A3B' },
+  { id:'c3', name:'마감',   color:'#A8503D' },
+  { id:'c4', name:'회의',   color:'#4C6A92' },
   { id:'c5', name:'이벤트', color:'#8B5A83' }
 ];
 
-/* 초기 일정 (date/endDate: YYYY-MM-DD, categoryId는 위 카테고리 id 참조) */
-const INITIAL_EVENTS = [
-  { id:'e1',  date:'2012-12-05', categoryId:'c1', label:'부산 출장' },
-  { id:'e2',  date:'2012-12-24', endDate:'2012-12-26', categoryId:'c2', label:'연말 연휴' },
-  { id:'e3',  date:'2013-01-02', categoryId:'c3', label:'분기 보고서 마감' },
-  { id:'e4',  date:'2013-01-15', categoryId:'c4', label:'전사 킥오프 회의' },
-  { id:'e5',  date:'2013-02-14', categoryId:'c5', label:'팀 워크숍' },
-  { id:'e6',  date:'2013-02-14', categoryId:'c3', label:'예산안 제출' },
-  { id:'e7',  date:'2013-03-10', endDate:'2013-03-14', categoryId:'c2', label:'봄 휴가' },
-  { id:'e8',  date:'2013-04-01', categoryId:'c1', label:'도쿄 출장' },
-  { id:'e9',  date:'2013-04-01', categoryId:'c4', label:'파트너사 미팅' },
-  { id:'e10', date:'2013-05-20', categoryId:'c3', label:'상반기 결산' },
-  { id:'e11', date:'2013-06-09', categoryId:'c5', label:'사내 해커톤' },
-  { id:'e12', date:'2013-07-04', endDate:'2013-07-06', categoryId:'c1', label:'싱가포르 출장' },
-  { id:'e13', date:'2013-08-15', endDate:'2013-08-20', categoryId:'c2', label:'여름 휴가' },
-  { id:'e14', date:'2013-09-02', categoryId:'c4', label:'이사회 보고' },
-  { id:'e15', date:'2013-10-11', categoryId:'c5', label:'제품 런칭' },
-  { id:'e16', date:'2013-10-11', categoryId:'c3', label:'런칭 자료 마감' },
-  { id:'e17', date:'2013-11-25', categoryId:'c4', label:'연말 결산 회의' }
+let EVENTS = [
+  { id:1,  date:'2012-12-05',                     categoryId:'c1', label:'부산 출장' },
+  { id:2,  date:'2012-12-24', endDate:'2012-12-26', categoryId:'c2', label:'연말 연휴' },
+  { id:3,  date:'2013-01-02',                     categoryId:'c3', label:'분기 보고서 마감' },
+  { id:4,  date:'2013-01-15',                     categoryId:'c4', label:'전사 킥오프 회의' },
+  { id:5,  date:'2013-02-14',                     categoryId:'c5', label:'팀 워크숍' },
+  { id:6,  date:'2013-02-14',                     categoryId:'c3', label:'예산안 제출' },
+  { id:7,  date:'2013-03-10', endDate:'2013-03-14', categoryId:'c2', label:'봄 휴가' },
+  { id:8,  date:'2013-04-01',                     categoryId:'c1', label:'도쿄 출장' },
+  { id:9,  date:'2013-04-01',                     categoryId:'c4', label:'파트너사 미팅' },
+  { id:10, date:'2013-05-20',                     categoryId:'c3', label:'상반기 결산' },
+  { id:11, date:'2013-06-09',                     categoryId:'c5', label:'사내 해커톤' },
+  { id:12, date:'2013-07-04', endDate:'2013-07-06', categoryId:'c1', label:'싱가포르 출장' },
+  { id:13, date:'2013-08-15', endDate:'2013-08-20', categoryId:'c2', label:'여름 휴가' },
+  { id:14, date:'2013-09-02',                     categoryId:'c4', label:'이사회 보고' },
+  { id:15, date:'2013-10-11',                     categoryId:'c5', label:'제품 런칭' },
+  { id:16, date:'2013-10-11',                     categoryId:'c3', label:'런칭 자료 마감' },
+  { id:17, date:'2013-11-25',                     categoryId:'c4', label:'연말 결산 회의' }
 ];
+
+let nextEventId = Math.max(0, ...EVENTS.map(e=>e.id)) + 1;
+let nextCatSeq = CATEGORIES.length + 1;
 
 /* =========================================================
    상태 & 유틸
@@ -444,36 +490,9 @@ const MONTH_NAMES = ['1월','2월','3월','4월','5월','6월','7월','8월','9�
 let state = {
   startYear: CONFIG.startYear,
   startMonth: CONFIG.startMonth,
-  categories: INITIAL_CATEGORIES.map(c=>({...c})),
-  events: INITIAL_EVENTS.map(e=>({...e})),
-  activeCategoryIds: null,
-  sidebarMode: 'color',
-  editingEventId: null,
-  catCounter: INITIAL_CATEGORIES.length + 1,
-  eventCounter: INITIAL_EVENTS.length + 1
+  activeCategoryIds: new Set(CATEGORIES.map(c=>c.id)),
+  sidebarMode: 'color'
 };
-
-
-function saveState(){
-  try{
-    localStorage.setItem('calendar_categories', JSON.stringify(state.categories));
-    localStorage.setItem('calendar_events', JSON.stringify(state.events));
-  }catch(e){}
-}
-function loadState(){
-  try{
-    const cats = JSON.parse(localStorage.getItem('calendar_categories'));
-    const evs = JSON.parse(localStorage.getItem('calendar_events'));
-    if(Array.isArray(cats)) state.categories = cats;
-    if(Array.isArray(evs)) state.events = evs;
-    state.catCounter = state.categories.reduce((m,c)=>{
-      const n=parseInt(String(c.id).replace(/\D/g,''),10)||0; return Math.max(m,n);
-    },0)+1;
-    state.eventCounter = state.events.reduce((m,e)=>{
-      const n=parseInt(String(e.id).replace(/\D/g,''),10)||0; return Math.max(m,n);
-    },0)+1;
-  }catch(e){}
-}
 
 function hexToRgba(hex, alpha){
   const h = hex.replace('#','');
@@ -483,6 +502,7 @@ function hexToRgba(hex, alpha){
   return `rgba(${r},${g},${b},${alpha})`;
 }
 function pad2(n){ return String(n).padStart(2,'0'); }
+
 function monthsInRange(startYear, startMonth){
   const list = [];
   for(let i=0;i<12;i++){
@@ -494,10 +514,10 @@ function monthsInRange(startYear, startMonth){
 }
 function daysInMonth(year, month){ return new Date(year, month, 0).getDate(); }
 function firstWeekday(year, month){ return new Date(year, month-1, 1).getDay(); }
-function getCategoryById(id){ return state.categories.find(c=>c.id===id); }
+function getCategory(id){ return CATEGORIES.find(c=>c.id===id); }
 
 function eventsOnDate(dateStr){
-  return state.events.filter(e=>{
+  return EVENTS.filter(e=>{
     const start = e.date;
     const end = e.endDate || e.date;
     return dateStr >= start && dateStr <= end && state.activeCategoryIds.has(e.categoryId);
@@ -505,14 +525,15 @@ function eventsOnDate(dateStr){
 }
 
 /* =========================================================
-   헤더 / 셀렉트 / 필터 칩
+   렌더: 헤더 / 셀렉트 / 칩
    ========================================================= */
 function populateSelectors(){
   const yearSel = document.getElementById('yearSelect');
   const monthSel = document.getElementById('monthSelect');
   yearSel.innerHTML = '';
   monthSel.innerHTML = '';
-  for(let y = state.startYear - 15; y <= state.startYear + 15; y++){
+  const thisYear = state.startYear;
+  for(let y = thisYear - 15; y <= thisYear + 15; y++){
     const opt = document.createElement('option');
     opt.value = y; opt.textContent = y + '년';
     if(y === state.startYear) opt.selected = true;
@@ -536,160 +557,21 @@ function updateRangeLabel(){
 function renderChips(){
   const row = document.getElementById('chipRow');
   row.innerHTML = '';
-  state.categories.forEach(cat=>{
+  CATEGORIES.forEach(cat=>{
     const chip = document.createElement('button');
     chip.className = 'chip' + (state.activeCategoryIds.has(cat.id) ? ' active' : '');
-    chip.innerHTML = `<span class="sq" style="background:${cat.color}"></span>${cat.name}`;
+    chip.innerHTML = `<span class="sw" style="background:${cat.color}"></span>${cat.name}`;
     chip.addEventListener('click', ()=>{
       if(state.activeCategoryIds.has(cat.id)) state.activeCategoryIds.delete(cat.id);
       else state.activeCategoryIds.add(cat.id);
-      renderCalendar();
-      renderSidebar();
+      renderAll(false);
     });
     row.appendChild(chip);
   });
 }
 
 /* =========================================================
-   카테고리 관리 (사이드바)
-   ========================================================= */
-function renderCategoryManager(){
-  const wrap = document.getElementById('catRows');
-  wrap.innerHTML = '';
-  state.categories.forEach(cat=>{
-    const row = document.createElement('div');
-    row.className = 'cat-row';
-
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.value = cat.color;
-    colorInput.addEventListener('input', ()=>{
-      cat.color = colorInput.value;
-      renderChips(); renderCalendar(); renderSidebar(); renderEventCategorySelect();
-    });
-
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.value = cat.name;
-    nameInput.addEventListener('input', ()=>{
-      cat.name = nameInput.value;
-      renderChips(); renderSidebar(); renderEventCategorySelect();
-    });
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn small ghost';
-    delBtn.textContent = '삭제';
-    delBtn.addEventListener('click', ()=>{
-      const inUse = state.events.some(e=>e.categoryId===cat.id);
-      const msg = inUse
-        ? `"${cat.name}" 카테고리를 쓰는 일정이 있습니다. 함께 삭제할까요?`
-        : `"${cat.name}" 카테고리를 삭제할까요?`;
-      if(!confirm(msg)) return;
-      state.categories = state.categories.filter(c=>c.id!==cat.id);
-      state.events = state.events.filter(e=>e.categoryId!==cat.id);
-      state.activeCategoryIds.delete(cat.id);
-      renderAll(false);
-    });
-
-    row.appendChild(colorInput);
-    row.appendChild(nameInput);
-    row.appendChild(delBtn);
-    wrap.appendChild(row);
-  });
-}
-
-document.getElementById('addCatBtn').addEventListener('click', ()=>{
-  const nameInput = document.getElementById('newCatName');
-  const colorInput = document.getElementById('newCatColor');
-  const name = nameInput.value.trim();
-  if(!name) { nameInput.focus(); return; }
-  const id = 'c' + (state.catCounter++);
-  state.categories.push({ id, name, color: colorInput.value });
-  state.activeCategoryIds.add(id);
-  nameInput.value = '';
-  renderAll(false);
-});
-
-/* =========================================================
-   일정 작성 폼
-   ========================================================= */
-function renderEventCategorySelect(){
-  const sel = document.getElementById('evCategory');
-  const prev = sel.value;
-  sel.innerHTML = '';
-  state.categories.forEach(cat=>{
-    const opt = document.createElement('option');
-    opt.value = cat.id;
-    opt.textContent = cat.name;
-    sel.appendChild(opt);
-  });
-  if(prev) sel.value = prev;
-}
-
-function showFormError(msg){
-  const box = document.getElementById('formError');
-  box.textContent = msg;
-  box.classList.add('show');
-}
-function clearFormError(){
-  const box = document.getElementById('formError');
-  box.textContent = '';
-  box.classList.remove('show');
-}
-
-function resetEventForm(){
-  state.editingEventId = null;
-  document.getElementById('evLabel').value = '';
-  document.getElementById('evStart').value = '';
-  document.getElementById('evEnd').value = '';
-  document.getElementById('submitEventBtn').textContent = '추가';
-  document.getElementById('cancelEditBtn').style.display = 'none';
-  document.getElementById('editingTag').style.display = 'none';
-  clearFormError();
-}
-
-function beginEditEvent(ev){
-  state.editingEventId = ev.id;
-  document.getElementById('evCategory').value = ev.categoryId;
-  document.getElementById('evLabel').value = ev.label;
-  document.getElementById('evStart').value = ev.date;
-  document.getElementById('evEnd').value = ev.endDate || '';
-  document.getElementById('submitEventBtn').textContent = '수정 완료';
-  document.getElementById('cancelEditBtn').style.display = 'block';
-  document.getElementById('editingTag').style.display = 'inline';
-  document.querySelector('.sidebar').scrollIntoView({behavior:'smooth', block:'start'});
-}
-
-document.getElementById('cancelEditBtn').addEventListener('click', resetEventForm);
-
-document.getElementById('submitEventBtn').addEventListener('click', ()=>{
-  clearFormError();
-  const categoryId = document.getElementById('evCategory').value;
-  const label = document.getElementById('evLabel').value.trim();
-  const start = document.getElementById('evStart').value;
-  const end = document.getElementById('evEnd').value;
-
-  if(!state.categories.length){ showFormError('먼저 카테고리를 추가해 주세요.'); return; }
-  if(!label){ showFormError('일정 이름을 입력해 주세요.'); return; }
-  if(!start){ showFormError('시작일을 선택해 주세요.'); return; }
-  if(end && end < start){ showFormError('종료일은 시작일보다 빠를 수 없습니다.'); return; }
-
-  if(state.editingEventId){
-    const ev = state.events.find(e=>e.id===state.editingEventId);
-    ev.categoryId = categoryId; ev.label = label; ev.date = start; ev.endDate = end || undefined;
-  } else {
-    state.events.push({
-      id: 'e' + (state.eventCounter++),
-      categoryId, label, date: start, endDate: end || undefined
-    });
-  }
-  resetEventForm();
-  renderCalendar();
-  renderSidebar();
-});
-
-/* =========================================================
-   달력 3x4
+   렌더: 달력 3x4
    ========================================================= */
 function renderCalendar(){
   const grid = document.getElementById('calendarGrid');
@@ -737,26 +619,22 @@ function renderCalendar(){
       cell.textContent = dayNum;
 
       if(dayEvents.length === 1){
-        const cat = getCategoryById(dayEvents[0].categoryId);
-        if(cat) cell.style.background = hexToRgba(cat.color, 0.40);
+        cell.style.background = hexToRgba(getCategory(dayEvents[0].categoryId).color, 0.38);
       } else if(dayEvents.length > 1){
         const n = dayEvents.length;
         const stops = [];
         dayEvents.forEach((e, idx)=>{
-          const cat = getCategoryById(e.categoryId);
           const startPct = (idx/n*100).toFixed(2);
           const endPct = ((idx+1)/n*100).toFixed(2);
-          const c = hexToRgba(cat ? cat.color : '#999999', 0.44);
+          const c = hexToRgba(getCategory(e.categoryId).color, 0.42);
           stops.push(`${c} ${startPct}%`, `${c} ${endPct}%`);
         });
         cell.style.background = `linear-gradient(90deg, ${stops.join(', ')})`;
       }
 
       if(dayEvents.length){
-        cell.title = dayEvents.map(e=>{
-          const cat = getCategoryById(e.categoryId);
-          return `[${cat ? cat.name : '?'}] ${e.label}`;
-        }).join('\n');
+        cell.title = dayEvents.map(e=>`[${getCategory(e.categoryId).name}] ${e.label}`).join('\n');
+        cell.addEventListener('click', ()=> showEventsForDate(dayEvents));
       }
 
       dayGrid.appendChild(cell);
@@ -768,7 +646,27 @@ function renderCalendar(){
 }
 
 /* =========================================================
-   사이드바: 일정 목록
+   날짜 클릭 -> 일정 목록에서 바로 보여주기
+   ========================================================= */
+function showEventsForDate(dayEvents){
+  switchTab('list');
+  const ids = dayEvents.map(e=>e.id);
+  requestAnimationFrame(()=>{
+    let firstEl = null;
+    document.querySelectorAll('.event-row').forEach(row=>{
+      const id = parseInt(row.dataset.id, 10);
+      if(ids.includes(id)){
+        row.classList.add('highlight');
+        if(!firstEl) firstEl = row;
+        setTimeout(()=> row.classList.remove('highlight'), 1600);
+      }
+    });
+    if(firstEl) firstEl.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+}
+
+/* =========================================================
+   렌더: 우측 일정 목록 (이름 좌측 / 날짜 우측, 한 줄)
    ========================================================= */
 function formatDateShort(e){
   const s = e.date.slice(5).replace('-','.');
@@ -778,44 +676,7 @@ function formatDateShort(e){
   return s;
 }
 
-function makeEventRow(e, showCategory){
-  const cat = getCategoryById(e.categoryId);
-  const row = document.createElement('div');
-  row.className = 'event-row';
-
-  const sq = document.createElement('span');
-  sq.className = 'sq';
-  sq.style.background = cat ? cat.color : '#999';
-
-  const body = document.createElement('div');
-  body.className = 'body';
-  body.innerHTML = `<div>${e.label}</div><div class="meta">${formatDateShort(e)}${showCategory && cat ? ' · ' + cat.name : ''}</div>`;
-
-  const actions = document.createElement('div');
-  actions.className = 'row-actions';
-  const editBtn = document.createElement('button');
-  editBtn.textContent = '✎';
-  editBtn.title = '수정';
-  editBtn.addEventListener('click', ()=> beginEditEvent(e));
-  const delBtn = document.createElement('button');
-  delBtn.textContent = '×';
-  delBtn.title = '삭제';
-  delBtn.addEventListener('click', ()=>{
-    if(!confirm(`"${e.label}" 일정을 삭제할까요?`)) return;
-    state.events = state.events.filter(ev=>ev.id!==e.id);
-    if(state.editingEventId === e.id) resetEventForm();
-    renderCalendar(); renderSidebar();
-  });
-  actions.appendChild(editBtn);
-  actions.appendChild(delBtn);
-
-  row.appendChild(sq);
-  row.appendChild(body);
-  row.appendChild(actions);
-  return row;
-}
-
-function renderSidebar(){
+function renderSidebarList(){
   const list = document.getElementById('eventList');
   list.innerHTML = '';
 
@@ -824,103 +685,187 @@ function renderSidebar(){
   const lastM = months[months.length-1];
   const rangeEnd = `${lastM.year}-${pad2(lastM.month)}-${pad2(daysInMonth(lastM.year, lastM.month))}`;
 
-  const visible = state.events.filter(e =>
+  const visible = EVENTS.filter(e =>
     state.activeCategoryIds.has(e.categoryId) &&
     e.date <= rangeEnd && (e.endDate || e.date) >= rangeStart
   );
 
   if(!visible.length){
-    list.innerHTML = '<div class="empty-note">표시할 일정이 없습니다. 위 필터 또는 기간을 확인해 보세요.</div>';
+    list.innerHTML = '<div class="empty-note">표시할 일정이 없습니다. 상단 필터를 확인해 보세요.</div>';
     return;
   }
 
   if(state.sidebarMode === 'date'){
     const sorted = [...visible].sort((a,b)=> a.date.localeCompare(b.date));
-    sorted.forEach(e=> list.appendChild(makeEventRow(e, true)));
+    sorted.forEach(e=> list.appendChild(makeEventRow(e)));
   } else {
-    state.categories.forEach(cat=>{
+    CATEGORIES.forEach(cat=>{
       const items = visible.filter(e=>e.categoryId===cat.id).sort((a,b)=>a.date.localeCompare(b.date));
       if(!items.length) return;
       const title = document.createElement('div');
       title.className = 'group-title';
-      title.innerHTML = `<span class="sq" style="background:${cat.color}"></span>${cat.name}`;
+      title.innerHTML = `<span class="sw" style="background:${cat.color}"></span>${cat.name}`;
       list.appendChild(title);
-      items.forEach(e=> list.appendChild(makeEventRow(e, false)));
+      items.forEach(e=> list.appendChild(makeEventRow(e)));
     });
   }
 }
 
+function makeEventRow(e){
+  const cat = getCategory(e.categoryId);
+  const row = document.createElement('div');
+  row.className = 'event-row';
+  row.dataset.id = e.id;
+  row.innerHTML = `
+    <span class="sw" style="background:${cat ? cat.color : '#999'}"></span>
+    <span class="label">${e.label}</span>
+    <span class="date">${formatDateShort(e)}</span>
+    <button class="del" title="삭제">×</button>
+  `;
+  row.querySelector('.del').addEventListener('click', ()=>{
+    EVENTS = EVENTS.filter(ev=>ev.id!==e.id);
+    renderAll(false);
+  });
+  return row;
+}
+
 /* =========================================================
-   내보내기 (GitHub 소스에 다시 붙여넣을 코드 생성)
+   렌더: 카테고리 관리 패널
+   ========================================================= */
+function renderCategoryPanel(){
+  const wrap = document.getElementById('catList');
+  wrap.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `
+      <input type="color" value="${cat.color}">
+      <input type="text" value="${cat.name}">
+      <button class="btn small danger" title="삭제">×</button>
+    `;
+    const [colorInput, nameInput, delBtn] = row.children;
+    colorInput.addEventListener('input', ()=>{
+      cat.color = colorInput.value;
+      renderAll(false);
+    });
+    nameInput.addEventListener('change', ()=>{
+      cat.name = nameInput.value.trim() || cat.name;
+      renderAll(false);
+    });
+    delBtn.addEventListener('click', ()=>{
+      const used = EVENTS.some(e=>e.categoryId===cat.id);
+      if(used && !confirm(`"${cat.name}" 카테고리를 사용하는 일정이 있습니다. 함께 삭제할까요?`)) return;
+      EVENTS = EVENTS.filter(e=>e.categoryId!==cat.id);
+      CATEGORIES = CATEGORIES.filter(c=>c.id!==cat.id);
+      state.activeCategoryIds.delete(cat.id);
+      renderAll(false);
+    });
+    wrap.appendChild(row);
+  });
+}
+
+document.getElementById('addCatBtn').addEventListener('click', ()=>{
+  const nameInput = document.getElementById('newCatName');
+  const colorInput = document.getElementById('newCatColor');
+  const name = nameInput.value.trim();
+  if(!name) return;
+  const id = 'c' + (nextCatSeq++);
+  CATEGORIES.push({ id, name, color: colorInput.value });
+  state.activeCategoryIds.add(id);
+  nameInput.value = '';
+  renderAll(false);
+});
+
+/* =========================================================
+   일정 추가 폼
+   ========================================================= */
+function populateCategorySelect(){
+  const sel = document.getElementById('evCategory');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    const opt = document.createElement('option');
+    opt.value = cat.id; opt.textContent = cat.name;
+    sel.appendChild(opt);
+  });
+  if(CATEGORIES.some(c=>c.id===prev)) sel.value = prev;
+}
+
+document.getElementById('evMultiDay').addEventListener('change', (e)=>{
+  document.getElementById('endDateField').style.display = e.target.checked ? '' : 'none';
+});
+
+document.getElementById('addEventForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const label = document.getElementById('evLabel').value.trim();
+  const categoryId = document.getElementById('evCategory').value;
+  const start = document.getElementById('evStart').value;
+  const multiDay = document.getElementById('evMultiDay').checked;
+  const end = document.getElementById('evEnd').value;
+  if(!label || !categoryId || !start) return;
+
+  const newEvent = { id: nextEventId++, date: start, categoryId, label };
+  if(multiDay && end && end >= start) newEvent.endDate = end;
+  EVENTS.push(newEvent);
+
+  document.getElementById('evLabel').value = '';
+  document.getElementById('evStart').value = '';
+  document.getElementById('evEnd').value = '';
+  document.getElementById('evMultiDay').checked = false;
+  document.getElementById('endDateField').style.display = 'none';
+
+  renderAll(false);
+});
+
+/* =========================================================
+   탭 전환
+   ========================================================= */
+function switchTab(tab){
+  ['List','Categories','Add'].forEach(name=>{
+    document.getElementById('tab'+name).classList.toggle('active', name.toLowerCase()===tab);
+    document.getElementById('panel'+name).classList.toggle('active', name.toLowerCase()===tab);
+  });
+}
+document.getElementById('tabList').addEventListener('click', ()=>switchTab('list'));
+document.getElementById('tabCategories').addEventListener('click', ()=>switchTab('categories'));
+document.getElementById('tabAdd').addEventListener('click', ()=>switchTab('add'));
+
+/* =========================================================
+   내보내기
    ========================================================= */
 function buildExportCode(){
-  const cats = state.categories.map(c=>`  { id:'${c.id}', name:'${c.name.replace(/'/g,"\\'")}', color:'${c.color}' }`).join(',\n');
-  const evs = state.events.map(e=>{
+  const catLines = CATEGORIES.map(c=>
+    `  { id:'${c.id}', name:'${c.name}', color:'${c.color}' }`).join(',\n');
+  const evLines = EVENTS.map(e=>{
     const end = e.endDate ? `, endDate:'${e.endDate}'` : '';
-    return `  { id:'${e.id}', date:'${e.date}'${end}, categoryId:'${e.categoryId}', label:'${e.label.replace(/'/g,"\\'")}' }`;
+    return `  { id:${e.id}, date:'${e.date}'${end}, categoryId:'${e.categoryId}', label:'${e.label.replace(/'/g,"\\'")}' }`;
   }).join(',\n');
-  return `const INITIAL_CATEGORIES = [\n${cats}\n];\n\nconst INITIAL_EVENTS = [\n${evs}\n];`;
+  return `let CATEGORIES = [\n${catLines}\n];\n\nlet EVENTS = [\n${evLines}\n];`;
 }
-
 document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const area = document.getElementById('exportArea');
-  const copyRow = document.getElementById('exportCopyRow');
-  const show = !area.classList.contains('show');
-  if(show){
-    area.value = buildExportCode();
-  }
-  area.classList.toggle('show', show);
-  copyRow.style.display = show ? 'flex' : 'none';
+  document.getElementById('exportText').value = buildExportCode();
+  document.getElementById('exportOverlay').classList.add('open');
 });
-document.getElementById('copyExportBtn').addEventListener('click', ()=>{
-  const area = document.getElementById('exportArea');
-  area.select();
-  navigator.clipboard && navigator.clipboard.writeText(area.value);
-  const btn = document.getElementById('copyExportBtn');
-  const original = btn.textContent;
-  btn.textContent = '복사됨';
-  setTimeout(()=>{ btn.textContent = original; }, 1200);
+document.getElementById('closeOverlay').addEventListener('click', ()=>{
+  document.getElementById('exportOverlay').classList.remove('open');
+});
+document.getElementById('copyExport').addEventListener('click', ()=>{
+  const ta = document.getElementById('exportText');
+  ta.select();
+  document.execCommand('copy');
 });
 
 /* =========================================================
-   브라우저 저장: GitHub Pages 같은 정적 사이트에서도
-   카테고리/일정을 새로고침 후 유지합니다.
-   ========================================================= */
-const STORAGE_KEY = 'annual-calendar-data-v1';
-
-function saveData(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      categories: state.categories,
-      events: state.events,
-      catCounter: state.catCounter,
-      eventCounter: state.eventCounter
-    }));
-  }catch(err){}
-}
-
-function loadSavedData(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if(!saved) return;
-    if(Array.isArray(saved.categories)) state.categories = saved.categories;
-    if(Array.isArray(saved.events)) state.events = saved.events;
-    if(Number.isFinite(saved.catCounter)) state.catCounter = saved.catCounter;
-    if(Number.isFinite(saved.eventCounter)) state.eventCounter = saved.eventCounter;
-  }catch(err){}
-}
-
-/* =========================================================
-   초기화 및 상단 네비게이션
+   초기화
    ========================================================= */
 function renderAll(resetSelectors){
   updateRangeLabel();
   if(resetSelectors) populateSelectors();
   renderChips();
-  renderCategoryManager();
-  renderEventCategorySelect();
   renderCalendar();
-  renderSidebar();
+  renderSidebarList();
+  renderCategoryPanel();
+  populateCategorySelect();
 }
 
 function shiftStart(delta){
@@ -942,18 +887,15 @@ document.getElementById('modeColor').addEventListener('click', ()=>{
   state.sidebarMode = 'color';
   document.getElementById('modeColor').classList.add('active');
   document.getElementById('modeDate').classList.remove('active');
-  renderSidebar();
+  renderSidebarList();
 });
 document.getElementById('modeDate').addEventListener('click', ()=>{
   state.sidebarMode = 'date';
   document.getElementById('modeDate').classList.add('active');
   document.getElementById('modeColor').classList.remove('active');
-  renderSidebar();
+  renderSidebarList();
 });
 
-loadSavedData();
-loadState();
-state.activeCategoryIds = new Set(state.categories.map(c=>c.id));
 populateSelectors();
 renderAll(false);
 </script>
